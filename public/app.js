@@ -120,12 +120,63 @@ async function activatePlan(planType) {
   const btn = event.target;
   btn.disabled = true; btn.textContent = 'Activating...';
   try {
-    const res = await apiFetch('/api/upgrade', { method: 'POST', body: JSON.stringify({ plan: planType }) });
-    const data = await res.json();
-    if (!data.success) throw new Error(data.error);
-    toast(`🎉 ${planType.charAt(0).toUpperCase() + planType.slice(1)} plan activated!`, 'success');
-    closeUpgradeModal();
-    await loadUsage();
+    // 1. Create order
+    const res = await apiFetch('/api/create-order', { method: 'POST', body: JSON.stringify({ plan: planType }) });
+    const orderData = await res.json();
+    if (!orderData.success) throw new Error(orderData.error);
+    
+    // 2. Open Razorpay Checkout
+    const options = {
+      key: orderData.key_id,
+      amount: orderData.amount,
+      currency: orderData.currency,
+      name: 'JobBot Pro',
+      description: `${planType.charAt(0).toUpperCase() + planType.slice(1)} Plan`,
+      order_id: orderData.order_id,
+      theme: { color: '#00D9AA' },
+      handler: async function (response) {
+        // 3. Verify payment
+        try {
+          btn.textContent = 'Verifying...';
+          const verifyRes = await apiFetch('/api/verify-payment', {
+            method: 'POST',
+            body: JSON.stringify({
+              plan: planType,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature
+            })
+          });
+          const verifyData = await verifyRes.json();
+          if (!verifyData.success) throw new Error(verifyData.error);
+          
+          toast(`🎉 ${planType.charAt(0).toUpperCase() + planType.slice(1)} plan activated!`, 'success');
+          closeUpgradeModal();
+          await loadUsage();
+        } catch (e) {
+          toast('Verification failed: ' + e.message, 'error');
+          btn.disabled = false;
+          btn.textContent = planType === 'weekly' ? 'Get Weekly' : 'Get Monthly';
+        }
+      },
+      prefill: {
+        name: getUser()?.name || '',
+        email: getUser()?.email || ''
+      },
+      modal: {
+        ondismiss: function() {
+          btn.disabled = false;
+          btn.textContent = planType === 'weekly' ? 'Get Weekly' : 'Get Monthly';
+        }
+      }
+    };
+    
+    const rzp = new window.Razorpay(options);
+    rzp.on('payment.failed', function (response){
+      toast('Payment failed: ' + response.error.description, 'error');
+    });
+    rzp.open();
+    
   } catch(e) {
     toast('Upgrade failed: ' + e.message, 'error');
     btn.disabled = false;
@@ -265,6 +316,7 @@ async function startScan() {
   if(document.getElementById('cp-linkedin')?.classList.contains('on')) portals.push('LinkedIn');
   if(document.getElementById('cp-indeed')?.classList.contains('on')) portals.push('Indeed');
   if(document.getElementById('cp-glassdoor')?.classList.contains('on')) portals.push('Glassdoor');
+  if(document.getElementById('cp-company')?.classList.contains('on')) portals.push('Company Website');
 
   log(`Roles: ${p.roles.join(', ')}`);
   log('Scanning...');
@@ -309,7 +361,7 @@ function renderJobs() {
   wrap.innerHTML=jobs.map((j,i)=>{
     const sc=j.score>=75?'h':j.score>=55?'m':'l';
     const applied=isApplied(j.id);const top5=i<5&&!applied;
-    const pi={naukri:'📋 NAUKRI',linkedin:'💼 LINKEDIN',indeed:'🔍 INDEED',glassdoor:'🏢 GLASSDOOR'}[j.portal?.toLowerCase()]||'💼 '+j.portal;
+    const pi={naukri:'📋 NAUKRI',linkedin:'💼 LINKEDIN',indeed:'🔍 INDEED',glassdoor:'🏢 GLASSDOOR','company website':'🌐 COMPANY SITE'}[j.portal?.toLowerCase()]||'💼 '+j.portal;
     const matched=(j.skills||[]).filter(s=>mySkills.some(ms=>ms&&s.toLowerCase().includes(ms)));
     const other=(j.skills||[]).filter(s=>!matched.includes(s));
     return`<div class="job-card ${applied?'applied':''} fu" style="animation-delay:${i*.05}s">
@@ -318,7 +370,9 @@ function renderJobs() {
       <div class="jc-ai"><strong>AI:</strong> ${j.reasons}</div>
       <div class="jc-skills">${matched.map(s=>`<span class="stag match">✓ ${s}</span>`).join('')}${other.map(s=>`<span class="stag">${s}</span>`).join('')}</div>
       <div class="jc-actions">
-        <button class="jbtn primary" onclick="window.open('${j.url||'#'}','_blank')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>Apply Now</button>
+        ${j.url && j.url.startsWith('http') ?
+        `<button class="jbtn primary" onclick="window.open('${j.url}', '_blank')"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>Apply Now</button>` :
+        `<button class="jbtn primary" disabled style="opacity:0.6;cursor:not-allowed;background-color:#555;" title="Direct apply link not available"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Direct URL Unavailable</button>`}
         <button class="jbtn" onclick="openCoverModal(${j.id})"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>Cover</button>
         ${applied?`<button class="jbtn" onclick="undoApply(${j.id})">↩ Undo</button>`:`<button class="jbtn teal" onclick="markApply(${j.id})"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/></svg>Applied</button>`}
       </div></div>`;
