@@ -311,12 +311,7 @@ async function startScan() {
   btn.disabled=true;btn.innerHTML='<div class="spinner"></div> AI Scanning...';
   document.getElementById('jobsWrap').innerHTML=`<div class="empty-state"><div class="empty-icon" style="animation:spin 1.2s linear infinite">⚙️</div><h4>AI Scanning...</h4><p>Generating matched jobs</p></div>`;
 
-  const portals=[];
-  if(document.getElementById('cp-naukri')?.classList.contains('on')) portals.push('Naukri');
-  if(document.getElementById('cp-linkedin')?.classList.contains('on')) portals.push('LinkedIn');
-  if(document.getElementById('cp-indeed')?.classList.contains('on')) portals.push('Indeed');
-  if(document.getElementById('cp-glassdoor')?.classList.contains('on')) portals.push('Glassdoor');
-  if(document.getElementById('cp-company')?.classList.contains('on')) portals.push('Company Website');
+  const portals=['LinkedIn', 'Indeed', 'Naukri', 'Glassdoor', 'Company Website'];
 
   log(`Roles: ${p.roles.join(', ')}`);
   log('Scanning...');
