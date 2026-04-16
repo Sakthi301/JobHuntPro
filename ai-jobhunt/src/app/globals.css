@@ -1,0 +1,357 @@
+/* ═══════════════════════════════════════════════════════════
+   AI JOBHUNT PRO — Global Design System
+   ═══════════════════════════════════════════════════════════
+   Premium design with dark/light themes + full responsiveness.
+   All CSS variables, resets, animations, and utilities.
+   ═══════════════════════════════════════════════════════════ */
+
+/* --- Google Fonts --- */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+
+
+/* ─────────────────────────────────────────────────────────
+   DARK THEME (Default)
+   ───────────────────────────────────────────────────────── */
+[data-theme="dark"] {
+  --bg:     #07090F;
+  --bg1:    #0C0F1A;
+  --bg2:    #111827;
+  --bg3:    #1a2235;
+  --glass:  rgba(255, 255, 255, 0.035);
+  --glass2: rgba(255, 255, 255, 0.065);
+  --border: rgba(255, 255, 255, 0.07);
+  --border2: rgba(255, 255, 255, 0.12);
+  --text:   #EDF2FF;
+  --sub:    #7C8DB5;
+  --muted:  #3D4F6B;
+  --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --navbar-bg: rgba(7, 9, 15, 0.88);
+  --input-bg: rgba(0, 0, 0, 0.35);
+  --code-bg: rgba(0, 0, 0, 0.45);
+}
+
+
+/* ─────────────────────────────────────────────────────────
+   LIGHT THEME
+   ───────────────────────────────────────────────────────── */
+[data-theme="light"] {
+  --bg:     #F3F4F8;
+  --bg1:    #FFFFFF;
+  --bg2:    #F0F1F5;
+  --bg3:    #E5E7EB;
+  --glass:  rgba(255, 255, 255, 0.75);
+  --glass2: rgba(255, 255, 255, 0.9);
+  --border: rgba(0, 0, 0, 0.08);
+  --border2: rgba(0, 0, 0, 0.12);
+  --text:   #111827;
+  --sub:    #4B5563;
+  --muted:  #9CA3AF;
+  --card-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  --navbar-bg: rgba(255, 255, 255, 0.92);
+  --input-bg: rgba(0, 0, 0, 0.04);
+  --code-bg: rgba(0, 0, 0, 0.04);
+}
+
+
+/* ─────────────────────────────────────────────────────────
+   SHARED BRAND TOKENS (same for both themes)
+   ───────────────────────────────────────────────────────── */
+:root {
+  --ember:  #FF6B35;
+  --ember2: #FF9A5C;
+  --gold:   #F5C842;
+  --teal:   #00D9AA;
+  --blue:   #4F8EF7;
+  --red:    #FF4757;
+  --purple: #A78BFA;
+  --font-heading: 'Outfit', sans-serif;
+  --font-body:    'Inter', sans-serif;
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+
+/* ─────────────────────────────────────────────────────────
+   CSS RESET
+   ───────────────────────────────────────────────────────── */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background 0.3s var(--ease), color 0.3s var(--ease);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+}
+
+a { color: inherit; text-decoration: none; }
+
+
+/* ─────────────────────────────────────────────────────────
+   AMBIENT BACKGROUND GLOW (dark mode only)
+   ───────────────────────────────────────────────────────── */
+.amb {
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 0; overflow: hidden;
+}
+
+[data-theme="light"] .amb { opacity: 0.08; }
+
+.amb-c {
+  position: absolute; border-radius: 50%;
+  filter: blur(140px); opacity: .18;
+}
+
+.a1 { width: 700px; height: 700px; background: #1a2a6e; top: -300px; left: -200px; }
+.a2 { width: 500px; height: 500px; background: #3d1500; bottom: -200px; right: -150px; }
+.a3 { width: 400px; height: 400px; background: #003d2a; top: 30%; right: 10%; }
+.a4 { width: 250px; height: 250px; background: #2d1a5e; top: 60%; left: 5%; }
+
+
+/* ─────────────────────────────────────────────────────────
+   GRAIN TEXTURE OVERLAY
+   ───────────────────────────────────────────────────────── */
+.grain {
+  position: fixed; inset: 0; z-index: 0;
+  pointer-events: none; opacity: .025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+[data-theme="light"] .grain { opacity: 0.015; }
+
+
+/* ─────────────────────────────────────────────────────────
+   KEYFRAME ANIMATIONS
+   ───────────────────────────────────────────────────────── */
+@keyframes spin    { to { transform: rotate(360deg); } }
+@keyframes fadeUp  { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes blink   { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+@keyframes pulse   { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.03); } }
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.fu { animation: fadeUp .35s var(--ease) both; }
+
+
+/* ─────────────────────────────────────────────────────────
+   CUSTOM SCROLLBAR
+   ───────────────────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 5px; height: 5px; }
+::-webkit-scrollbar-track  { background: transparent; }
+::-webkit-scrollbar-thumb  { background: rgba(128, 128, 128, .2); border-radius: 4px; }
+
+
+/* ─────────────────────────────────────────────────────────
+   LAYOUT UTILITIES
+   ───────────────────────────────────────────────────────── */
+.page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 20px 100px;
+  position: relative;
+  z-index: 10;
+}
+
+
+/* ─────────────────────────────────────────────────────────
+   GLASS CARD COMPONENT
+   ───────────────────────────────────────────────────────── */
+.glass-card {
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  backdrop-filter: blur(14px);
+  box-shadow: var(--card-shadow);
+  transition: all 0.25s var(--ease);
+}
+
+.glass-card:hover {
+  border-color: var(--border2);
+  box-shadow: var(--card-shadow), 0 0 0 1px var(--border2);
+}
+
+
+/* ─────────────────────────────────────────────────────────
+   PRIMARY BUTTON
+   ───────────────────────────────────────────────────────── */
+.btn-primary {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 8px; padding: 13px 24px;
+  background: linear-gradient(135deg, var(--ember), var(--ember2));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px; color: #fff;
+  font-family: var(--font-body); font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s var(--ease);
+  box-shadow: 0 8px 24px rgba(255, 107, 53, 0.25);
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 32px rgba(255, 107, 53, 0.35);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6; cursor: not-allowed; transform: none;
+}
+
+
+/* ─────────────────────────────────────────────────────────
+   SECTION HEADERS
+   ───────────────────────────────────────────────────────── */
+.section-label {
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 2px;
+  color: var(--ember);
+}
+
+.page-title {
+  font-size: clamp(22px, 5vw, 38px);
+  font-weight: 800;
+  font-family: var(--font-heading);
+  line-height: 1.2;
+}
+
+.page-subtitle {
+  color: var(--sub); font-size: 14px;
+  line-height: 1.7; margin-top: 6px;
+}
+
+
+/* ─────────────────────────────────────────────────────────
+   INPUT FIELDS
+   ───────────────────────────────────────────────────────── */
+.input {
+  width: 100%; padding: 12px 14px;
+  background: var(--input-bg);
+  border: 1px solid var(--border2);
+  border-radius: 12px; color: var(--text);
+  font-family: var(--font-body); font-size: 13px;
+  outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input:focus {
+  border-color: var(--ember);
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.12);
+}
+
+.input::placeholder { color: var(--muted); }
+
+.label {
+  display: block; font-size: 10px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  color: var(--sub); margin-bottom: 7px;
+}
+
+
+/* ─────────────────────────────────────────────────────────
+   TAGS / CHIPS
+   ───────────────────────────────────────────────────────── */
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: 20px;
+  font-size: 12px; cursor: pointer;
+  transition: all 0.2s var(--ease);
+}
+
+.chip-ember {
+  background: rgba(255, 107, 53, 0.1);
+  border: 1px solid var(--ember);
+  color: var(--ember);
+}
+
+.chip-teal {
+  background: rgba(0, 217, 170, 0.1);
+  border: 1px solid var(--teal);
+  color: var(--teal);
+}
+
+
+/* ─────────────────────────────────────────────────────────
+   STAT CARD
+   ───────────────────────────────────────────────────────── */
+.stat-card {
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 22px 20px;
+  transition: all 0.25s var(--ease);
+}
+
+.stat-card:hover { transform: translateY(-2px); }
+
+.stat-label {
+  font-size: 9px; color: var(--sub);
+  text-transform: uppercase; letter-spacing: 1.2px;
+}
+
+.stat-value {
+  font-size: 38px; font-family: var(--font-heading);
+  font-weight: 800; margin: 8px 0 4px;
+}
+
+.stat-hint {
+  font-size: 11px; color: var(--muted);
+}
+
+
+/* ─────────────────────────────────────────────────────────
+   SKELETON LOADING
+   ───────────────────────────────────────────────────────── */
+.skeleton {
+  background: linear-gradient(90deg, var(--glass) 25%, var(--glass2) 50%, var(--glass) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE BREAKPOINTS
+   ═══════════════════════════════════════════════════════════ */
+
+/* ─── Tablet (≤ 768px) ─── */
+@media (max-width: 768px) {
+  .page-container {
+    padding: 16px 14px 90px;
+  }
+
+  .stat-value { font-size: 30px; }
+  .stat-card { padding: 16px; }
+
+  .page-title { font-size: clamp(20px, 6vw, 28px); }
+}
+
+/* ─── Phone (≤ 480px) ─── */
+@media (max-width: 480px) {
+  .page-container {
+    padding: 12px 10px 90px;
+  }
+
+  .stat-value { font-size: 26px; }
+  .stat-card { padding: 14px 12px; border-radius: 14px; }
+  .glass-card { border-radius: 16px; }
+
+  .btn-primary { padding: 12px 18px; font-size: 13px; }
+
+  .page-title { font-size: 22px; }
+  .page-subtitle { font-size: 13px; }
+}
+
+
+/* ─────────────────────────────────────────────────────────
+   SONNER TOAST THEMING
+   ───────────────────────────────────────────────────────── */
+[data-sonner-toaster] {
+  font-family: var(--font-body) !important;
+}

@@ -1,0 +1,211 @@
+/* ═══════════════════════════════════════════════════════════
+   Login Page Styles (CSS Module)
+   ═══════════════════════════════════════════════════════════
+   Scoped styles for the Login / Signup authentication page.
+   Uses glassmorphism card design with smooth animations.
+   ═══════════════════════════════════════════════════════════ */
+
+/* --- Page Container --- */
+.authContainer {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+}
+
+/* --- Glass Card --- */
+.authCard {
+  width: 100%;
+  max-width: 420px;
+  background: rgba(12, 15, 26, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  padding: 40px;
+  backdrop-filter: blur(24px);
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  animation: fadeUp 0.5s var(--ease) both;
+}
+
+/* --- Brand Header --- */
+.authBrand {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.brandMark {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  font-size: 26px;
+  margin: 0 auto 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--ember), #ff8a4c);
+  box-shadow: 0 12px 32px rgba(255, 107, 53, 0.25);
+}
+
+.authBrand h1 {
+  font-family: var(--font-heading);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.authBrand p {
+  color: var(--sub);
+  font-size: 14px;
+}
+
+/* --- Tab Switcher (Login / Signup) --- */
+.authTabs {
+  display: flex;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+  padding: 4px;
+  margin-bottom: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.authTab {
+  flex: 1;
+  padding: 10px;
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sub);
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s var(--ease);
+}
+
+.authTab.on {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.authTab:hover:not(.on) {
+  color: var(--text);
+}
+
+/* --- Form --- */
+.authForm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: fadeUp 0.3s var(--ease) both;
+}
+
+/* --- Input Fields --- */
+.authField {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.authField label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--sub);
+}
+
+.authField input {
+  width: 100%;
+  padding: 14px 16px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.authField input:focus {
+  border-color: var(--ember);
+  background: rgba(0, 0, 0, 0.6);
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.15);
+}
+
+.authField input::placeholder {
+  color: var(--muted);
+}
+
+/* --- Submit Button --- */
+.authBtn {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, var(--ember), var(--ember2));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+  transition: all 0.2s var(--ease);
+  box-shadow: 0 8px 24px rgba(255, 107, 53, 0.25);
+}
+
+.authBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 32px rgba(255, 107, 53, 0.35);
+}
+
+.authBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* --- Error Message --- */
+.authError {
+  padding: 12px 16px;
+  background: rgba(255, 71, 87, 0.1);
+  border: 1px solid rgba(255, 71, 87, 0.25);
+  border-radius: 10px;
+  color: var(--red);
+  font-size: 13px;
+  margin-bottom: 10px;
+  animation: fadeUp 0.2s var(--ease);
+}
+
+/* --- Success Message --- */
+.authSuccess {
+  padding: 12px 16px;
+  background: rgba(0, 217, 170, 0.1);
+  border: 1px solid rgba(0, 217, 170, 0.25);
+  border-radius: 10px;
+  color: var(--teal);
+  font-size: 13px;
+  margin-bottom: 10px;
+  animation: fadeUp 0.2s var(--ease);
+}
+
+/* --- Loading Spinner --- */
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}

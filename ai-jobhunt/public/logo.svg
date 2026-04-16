@@ -1,0 +1,30 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="ringGrad" x1="10%" y1="10%" x2="90%" y2="90%">
+      <stop offset="0%" stop-color="#FFB703" />
+      <stop offset="25%" stop-color="#06D6A0" />
+      <stop offset="50%" stop-color="#118AB2" />
+      <stop offset="75%" stop-color="#073B4C" />
+      <stop offset="100%" stop-color="#EF476F" />
+    </linearGradient>
+    
+    <linearGradient id="handleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#118AB2" />
+      <stop offset="100%" stop-color="#EF476F" />
+    </linearGradient>
+    
+    <linearGradient id="zapGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFD166" />
+      <stop offset="100%" stop-color="#F77F00" />
+    </linearGradient>
+  </defs>
+
+  <!-- Handle -->
+  <line x1="168" y1="168" x2="220" y2="220" stroke="url(#handleGrad)" stroke-width="36" stroke-linecap="round" />
+  
+  <!-- Ring -->
+  <circle cx="115" cy="115" r="75" stroke="url(#ringGrad)" stroke-width="26" />
+  
+  <!-- Lightning Bolt -->
+  <path d="M 130 65 L 85 120 H 120 L 105 165 L 155 105 H 120 L 130 65 Z" fill="url(#zapGrad)" />
+</svg>

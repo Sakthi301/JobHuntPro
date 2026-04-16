@@ -1,0 +1,186 @@
+// ═══════════════════════════════════════════════════════════
+// Navbar — Desktop Navigation with Theme Toggle
+// ═══════════════════════════════════════════════════════════
+// Features:
+// - Brand logo with gradient text
+// - Tab navigation links with active indicator
+// - Dark/Light mode toggle button (Sun/Moon)
+// - User avatar + logout button
+// - Responsive: hides tabs on mobile (MobileNav takes over)
+// ═══════════════════════════════════════════════════════════
+
+"use client";
+
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { Settings, Search, BarChart2, CheckSquare, FileText, LogOut, Sun, Moon } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { useEffect, useState } from "react";
+import { useTheme } from "next-themes";
+import { motion } from "motion/react";
+
+// Navigation items
+const NAV_ITEMS = [
+  { name: "Setup",     path: "/setup",     icon: Settings },
+  { name: "Hunt",      path: "/",          icon: Search },
+  { name: "Analytics", path: "/analytics", icon: BarChart2 },
+  { name: "Tracker",   path: "/tracker",   icon: CheckSquare },
+  { name: "Cover",     path: "/cover",     icon: FileText },
+];
+
+export default function Navbar() {
+  const pathname = usePathname();
+  const router = useRouter();
+  const supabase = createClient();
+  const [userName, setUserName] = useState("");
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  // Wait for hydration before showing theme toggle
+  useEffect(() => setMounted(true), []);
+
+  // Fetch user name on mount
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.user_metadata?.full_name) {
+        setUserName(user.user_metadata.full_name);
+      } else {
+        setUserName(user?.email?.split("@")[0] || "User");
+      }
+    };
+    getUser();
+  }, []);
+
+  // Sign out
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push("/login");
+  };
+
+  return (
+    <nav style={{
+      position: "sticky", top: 0, zIndex: 100,
+      display: "flex", alignItems: "center", justifyContent: "space-between",
+      padding: "0 28px", height: "62px",
+      background: "var(--navbar-bg)", backdropFilter: "blur(24px)",
+      borderBottom: "1px solid var(--border)",
+      transition: "background 0.3s, border-color 0.3s"
+    }}>
+
+      {/* ─── Brand Logo ─── */}
+      <Link href="/" style={{ textDecoration: 'none' }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer" }}>
+          <motion.img
+            src="/logo.svg"
+            alt="MyAIJobHunt Logo"
+            whileHover={{ rotate: 10, scale: 1.1 }}
+            style={{ width: "36px", height: "36px", flexShrink: 0 }}
+          />
+          <div>
+            <div style={{
+              fontFamily: "var(--font-heading)", fontSize: "20px", fontWeight: 800,
+              background: "linear-gradient(90deg, #FF7A18 0%, #FFC837 40%, #4FACFE 70%, #007BFF 100%)",
+              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent"
+            }}>MyAIJobHunt</div>
+          </div>
+        </div>
+      </Link>
+
+      {/* ─── Desktop Tab Links ─── */}
+      <div className="nav-tabs" style={{ display: "flex", gap: "2px" }}>
+        {NAV_ITEMS.map((item) => {
+          const isActive = pathname === item.path;
+          const Icon = item.icon;
+          return (
+            <Link key={item.path} href={item.path}>
+              <motion.div
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.97 }}
+                style={{
+                  display: "flex", alignItems: "center", gap: "7px",
+                  padding: "8px 14px", borderRadius: "9px",
+                  fontSize: "13px", fontWeight: 500,
+                  color: isActive ? "var(--ember)" : "var(--sub)",
+                  background: isActive ? "rgba(255, 107, 53, 0.1)" : "transparent",
+                  border: isActive ? "1px solid rgba(255, 107, 53, 0.2)" : "1px solid transparent",
+                  transition: "all .2s"
+                }}
+              >
+                <Icon size={15} /> {item.name}
+              </motion.div>
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* ─── Right Section: Theme Toggle + User ─── */}
+      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+
+        {/* Theme Toggle Button */}
+        {mounted && (
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9, rotate: 180 }}
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+            style={{
+              width: "36px", height: "36px", borderRadius: "10px",
+              background: "var(--glass)", border: "1px solid var(--border)",
+              color: theme === "dark" ? "var(--gold)" : "var(--blue)",
+              cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+              transition: "all 0.2s"
+            }}
+          >
+            {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+          </motion.button>
+        )}
+
+        {/* User Avatar + Name + Logout */}
+        <div style={{
+          display: "flex", alignItems: "center", gap: "10px",
+          padding: "5px 10px 5px 5px", borderRadius: "10px",
+          background: "var(--glass)", border: "1px solid var(--border)"
+        }}>
+          <div style={{
+            width: "30px", height: "30px", borderRadius: "8px",
+            background: "linear-gradient(135deg, var(--ember), var(--ember2))",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontFamily: "var(--font-heading)", fontSize: "13px", fontWeight: 800, color: "#fff"
+          }}>
+            {userName.charAt(0).toUpperCase()}
+          </div>
+
+          <div className="user-name" style={{
+            fontSize: "12px", color: "var(--sub)", fontWeight: 500,
+            maxWidth: "100px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"
+          }}>
+            {userName}
+          </div>
+
+          <motion.button
+            whileHover={{ scale: 1.15 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={handleLogout}
+            title="Sign Out"
+            style={{
+              background: "none", border: "none", color: "var(--muted)",
+              cursor: "pointer", padding: "4px", borderRadius: "6px",
+              display: "flex", alignItems: "center"
+            }}
+          >
+            <LogOut size={16} />
+          </motion.button>
+        </div>
+      </div>
+
+      {/* Responsive: hide desktop tabs + user name on mobile */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media (max-width: 768px) {
+          .nav-tabs { display: none !important; }
+          .user-name { display: none !important; }
+        }
+      `}} />
+    </nav>
+  );
+}

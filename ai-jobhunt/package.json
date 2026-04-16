@@ -1,0 +1,36 @@
+{
+  "name": "ai-jobhunt",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "@formkit/auto-animate": "^0.9.0",
+    "@lottiefiles/dotlottie-react": "^0.19.0",
+    "@supabase/ssr": "^0.10.2",
+    "@supabase/supabase-js": "^2.103.3",
+    "apexcharts": "^5.10.6",
+    "lucide-react": "^1.8.0",
+    "motion": "^12.38.0",
+    "next": "16.2.4",
+    "next-themes": "^0.4.6",
+    "razorpay": "^2.9.6",
+    "react": "19.2.4",
+    "react-apexcharts": "^2.1.0",
+    "react-countup": "^6.5.3",
+    "react-dom": "19.2.4",
+    "sonner": "^2.0.7"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.4",
+    "typescript": "^5"
+  }
+}
