@@ -21,7 +21,7 @@ export default function SetupPage() {
   // --- State ---
   const [profile, setProfile] = useState({
     name: "", exp: "", role: "", industry: "",
-    skills: "", achieve: "", minSal: "", shift: "any"
+    skills: "", achieve: "", minSal: "", shift: "any", jobType: "Full-time"
   });
   const [roles, setRoles] = useState<string[]>([]);
   const [roleInput, setRoleInput] = useState("");
@@ -51,7 +51,7 @@ export default function SetupPage() {
           exp: data.experience || "", role: data.current_role || "",
           industry: data.industry || "", skills: data.skills || "",
           achieve: data.achievement || "", minSal: data.min_salary || "",
-          shift: data.work_preference || "any"
+          shift: data.work_preference || "any", jobType: data.job_type || "Full-time"
         });
         setRoles(data.target_roles || []);
         setLocs(data.target_locations || []);
@@ -88,7 +88,8 @@ export default function SetupPage() {
         industry: profile.industry, skills: profile.skills,
         achievement: profile.achieve, target_roles: roles,
         target_locations: locs, min_salary: profile.minSal,
-        work_preference: profile.shift, updated_at: new Date().toISOString()
+        work_preference: profile.shift, job_type: profile.jobType,
+        updated_at: new Date().toISOString()
       });
       if (error) throw error;
 
@@ -165,6 +166,32 @@ export default function SetupPage() {
       {/* ─── Search Preferences ─── */}
       <div className="glass-card" style={{ padding: "24px", marginBottom: "16px" }}>
         <div className="section-label" style={{ marginBottom: "20px" }}>SEARCH PREFERENCES</div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "14px", marginBottom: "18px" }}>
+          <div>
+            <label className="label">Min. Expected Salary</label>
+            <input className="input" type="text" value={profile.minSal} onChange={e => setProfile({...profile, minSal: e.target.value})} placeholder="e.g. $70k, ₹12 LPA..." />
+          </div>
+          <div>
+            <label className="label">Work Preference</label>
+            <select className="input" value={profile.shift} onChange={e => setProfile({...profile, shift: e.target.value})}>
+              <option value="any">Any</option>
+              <option value="remote">Remote Only</option>
+              <option value="hybrid">Hybrid</option>
+              <option value="onsite">On-site Only</option>
+            </select>
+          </div>
+          <div>
+            <label className="label">Job Type</label>
+            <select className="input" value={profile.jobType} onChange={e => setProfile({...profile, jobType: e.target.value})}>
+              <option value="Full-time">Full-time</option>
+              <option value="Contract">Contract</option>
+              <option value="Internship">Internship</option>
+              <option value="Part-time">Part-time</option>
+              <option value="Freelance">Freelance</option>
+            </select>
+          </div>
+        </div>
 
         {/* Target Roles with AutoAnimate */}
         <div style={{ marginBottom: "18px" }}>

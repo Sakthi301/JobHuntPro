@@ -22,6 +22,7 @@ export type Profile = {
   target_locations: string[];    // PostgreSQL array of target cities
   min_salary: string | null;
   work_preference: string | null; // "any", "remote", "onsite", "hybrid"
+  job_type: string | null;        // "Full-time", "Contract", etc.
   plan: string;                  // "free", "weekly", "monthly"
   plan_expiry: string | null;
   usage_count: number;           // Number of scans used
