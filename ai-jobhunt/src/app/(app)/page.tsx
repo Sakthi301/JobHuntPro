@@ -14,17 +14,22 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { JobScanned, Profile } from "@/types";
-import { Search, Loader2, Target, Filter } from "lucide-react";
+import { Search, Loader2, Target, Filter, Crown } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { toast } from "sonner";
 import CountUp from "react-countup";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import PricingModal from "@/components/PricingModal";
+
+// Module-level cache to keep jobs alive when navigating between tabs
+let cachedJobs: JobScanned[] = [];
 
 export default function DashboardPage() {
-  const [jobs, setJobs] = useState<JobScanned[]>([]);
+  const [jobs, setJobs] = useState<JobScanned[]>(cachedJobs);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [scanning, setScanning] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(true);
+  const [showPricing, setShowPricing] = useState(false);
 
   const supabase = createClient();
 
@@ -40,10 +45,34 @@ export default function DashboardPage() {
     loadData();
   }, []);
 
+  // Listen for Navbar "Upgrade" button click
+  useEffect(() => {
+    const handler = () => setShowPricing(true);
+    window.addEventListener("show-pricing", handler);
+    return () => window.removeEventListener("show-pricing", handler);
+  }, []);
+
   // --- AI Job Scan ---
   const handleScan = async () => {
-    if (!profile) { toast.error("Please complete your profile first!"); return; }
-    setScanning(true); setJobs([]);
+    if (
+      !profile ||
+      !profile.name ||
+      !profile.experience ||
+      !profile.current_role ||
+      !profile.industry ||
+      !profile.skills ||
+      !profile.achievement ||
+      !profile.min_salary ||
+      !profile.target_roles || profile.target_roles.length === 0 ||
+      !profile.target_locations || profile.target_locations.length === 0
+    ) {
+      toast.error("Please fill out ALL text fields and add locations/roles in Setup before scanning! 🛑");
+      return;
+    }
+
+    setScanning(true); 
+    cachedJobs = [];
+    setJobs([]);
     toast.loading("🤖 AI is scanning jobs...", { id: "scan" });
 
     try {
@@ -54,8 +83,13 @@ export default function DashboardPage() {
       });
       const data = await res.json();
       if (data.success) {
-        setJobs(data.jobs.sort((a: JobScanned, b: JobScanned) => b.score - a.score));
+        cachedJobs = data.jobs.sort((a: JobScanned, b: JobScanned) => b.score - a.score);
+        setJobs(cachedJobs);
         toast.success(`Found ${data.jobs.length} matching jobs! ✅`, { id: "scan" });
+      } else if (data.error === "limit_reached") {
+        // Free tier limit hit — show upgrade modal
+        toast.error("You've used all 5 free scans! Upgrade to continue. 🔒", { id: "scan" });
+        setShowPricing(true);
       } else {
         toast.error("Scan failed: " + data.error, { id: "scan" });
       }
@@ -64,6 +98,16 @@ export default function DashboardPage() {
     } finally {
       setScanning(false);
     }
+  };
+
+  // --- Refresh profile after successful payment ---
+  const refreshProfile = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+      setProfile(data);
+    }
+    setShowPricing(false);
   };
 
   // --- Mark job as applied ---
@@ -110,6 +154,22 @@ export default function DashboardPage() {
           <div className="stat-label">Total Scans</div>
           <div className="stat-value"><CountUp end={profile?.usage_count || 0} duration={1.5} /></div>
           <div className="stat-hint">All time</div>
+        </motion.div>
+
+        <motion.div className="stat-card" style={{ borderTop: `2px solid ${profile?.plan && profile.plan !== 'free' ? 'var(--gold)' : 'var(--muted)'}` }} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+          <div className="stat-label">Current Plan</div>
+          <div style={{ fontSize: "20px", fontFamily: "var(--font-heading)", fontWeight: 800, margin: "8px 0 4px", display: "flex", alignItems: "center", gap: "6px" }}>
+            {profile?.plan && profile.plan !== 'free' ? (
+              <><Crown size={18} style={{ color: "var(--gold)" }} /> {profile.plan.charAt(0).toUpperCase() + profile.plan.slice(1)}</>
+            ) : (
+              "Free"
+            )}
+          </div>
+          <div className="stat-hint">
+            {profile?.plan === 'free'
+              ? `${Math.max(0, 5 - (profile?.usage_count || 0))} scans left`
+              : "Unlimited scans"}
+          </div>
         </motion.div>
       </div>
 
@@ -224,6 +284,15 @@ export default function DashboardPage() {
           .dashboard-grid { grid-template-columns: 1fr !important; }
         }
       `}} />
+
+      {/* ─── Pricing Modal ─── */}
+      <PricingModal
+        isOpen={showPricing}
+        onClose={() => setShowPricing(false)}
+        onSuccess={refreshProfile}
+        userEmail={profile?.email || ""}
+        userName={profile?.name || ""}
+      />
     </div>
   );
 }

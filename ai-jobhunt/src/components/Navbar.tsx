@@ -13,7 +13,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Settings, Search, BarChart2, CheckSquare, FileText, LogOut, Sun, Moon } from "lucide-react";
+import { Settings, Search, BarChart2, CheckSquare, FileText, LogOut, Sun, Moon, Crown } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
@@ -35,6 +35,7 @@ export default function Navbar() {
   const [userName, setUserName] = useState("");
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [userPlan, setUserPlan] = useState("free");
 
   // Wait for hydration before showing theme toggle
   useEffect(() => setMounted(true), []);
@@ -47,6 +48,11 @@ export default function Navbar() {
         setUserName(user.user_metadata.full_name);
       } else {
         setUserName(user?.email?.split("@")[0] || "User");
+      }
+      // Fetch plan
+      if (user) {
+        const { data: profile } = await supabase.from("profiles").select("plan").eq("id", user.id).single();
+        if (profile?.plan) setUserPlan(profile.plan);
       }
     };
     getUser();
@@ -114,8 +120,39 @@ export default function Navbar() {
         })}
       </div>
 
-      {/* ─── Right Section: Theme Toggle + User ─── */}
+      {/* ─── Right Section: Plan Badge + Theme Toggle + User ─── */}
       <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+
+        {/* Plan Badge */}
+        {userPlan && userPlan !== "free" ? (
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            style={{
+              display: "flex", alignItems: "center", gap: "5px",
+              padding: "5px 12px", borderRadius: "8px",
+              background: "rgba(245,200,66,0.1)", border: "1px solid rgba(245,200,66,0.3)",
+              fontSize: "11px", fontWeight: 700, fontFamily: "var(--font-heading)",
+              color: "var(--gold)", textTransform: "uppercase", letterSpacing: "0.5px",
+            }}
+          >
+            <Crown size={13} /> PRO
+          </motion.div>
+        ) : (
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => window.dispatchEvent(new CustomEvent("show-pricing"))}
+            style={{
+              padding: "6px 14px", borderRadius: "8px",
+              fontSize: "11px", fontWeight: 700,
+              background: "linear-gradient(135deg, var(--ember), var(--ember2))",
+              border: "none", color: "#fff", cursor: "pointer",
+              fontFamily: "var(--font-heading)", letterSpacing: "0.3px",
+            }}
+          >
+            ⚡ Upgrade
+          </motion.button>
+        )}
 
         {/* Theme Toggle Button */}
         {mounted && (

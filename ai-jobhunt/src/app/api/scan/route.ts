@@ -21,6 +21,29 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
+    // --- Plan & Usage Limit Check ---
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('plan, plan_expiry, usage_count')
+      .eq('id', user.id)
+      .single();
+
+    if (profileData) {
+      const isPaid = profileData.plan && profileData.plan !== 'free';
+      const isExpired = isPaid && profileData.plan_expiry && new Date(profileData.plan_expiry) < new Date();
+
+      // Auto-downgrade expired paid plans back to free
+      if (isExpired) {
+        await supabase.from('profiles').update({ plan: 'free', plan_expiry: null }).eq('id', user.id);
+        profileData.plan = 'free';
+      }
+
+      // Free users: max 5 scans
+      if ((!profileData.plan || profileData.plan === 'free') && (profileData.usage_count || 0) >= 5) {
+        return NextResponse.json({ success: false, error: 'limit_reached' }, { status: 403 });
+      }
+    }
+
     // --- Parse Request Body ---
     const { profile } = await req.json();
     const targetRole = profile.target_roles?.[0] || 'Developer';

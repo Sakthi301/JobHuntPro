@@ -77,6 +77,16 @@ export default function SetupPage() {
 
   // --- Save to Supabase ---
   const saveProfile = async () => {
+    // Validation
+    if (!profile.name.trim() || !profile.exp.trim() || !profile.role.trim() || !profile.industry || !profile.skills.trim() || !profile.achieve.trim() || !profile.minSal.trim()) {
+      toast.error("Please fill out all text fields before starting your hunt! 🛑");
+      return;
+    }
+    if (roles.length === 0 || locs.length === 0) {
+      toast.error("Please add at least one Target Job Role and Location! 🎯");
+      return;
+    }
+
     setSaving(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -135,16 +145,16 @@ export default function SetupPage() {
         {/* Responsive 2-col grid */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "14px", marginBottom: "14px" }}>
           <div><label className="label">Full Name</label>
-            <input className="input" type="text" value={profile.name} onChange={e => setProfile({...profile, name: e.target.value})} placeholder="John Doe" /></div>
+            <input className="input" type="text" value={profile.name} onChange={e => setProfile({ ...profile, name: e.target.value })} /></div>
           <div><label className="label">Experience</label>
-            <input className="input" type="text" value={profile.exp} onChange={e => setProfile({...profile, exp: e.target.value})} placeholder="2+ years" /></div>
+            <input className="input" type="text" value={profile.exp} onChange={e => setProfile({ ...profile, exp: e.target.value })} /></div>
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "14px", marginBottom: "14px" }}>
           <div><label className="label">Current Role</label>
-            <input className="input" type="text" value={profile.role} onChange={e => setProfile({...profile, role: e.target.value})} placeholder="Software Engineer" /></div>
+            <input className="input" type="text" value={profile.role} onChange={e => setProfile({ ...profile, role: e.target.value })} placeholder="Software Engineer" /></div>
           <div><label className="label">Industry</label>
-            <select className="input" value={profile.industry} onChange={e => setProfile({...profile, industry: e.target.value})}>
+            <select className="input" value={profile.industry} onChange={e => setProfile({ ...profile, industry: e.target.value })}>
               <option value="">Select industry...</option>
               {["Software / IT", "Telecom / Networking", "Data Science / AI", "Finance / Banking", "Healthcare", "Marketing / Sales", "Design / Creative", "Other"].map(ind => (
                 <option key={ind} value={ind}>{ind}</option>
@@ -154,12 +164,12 @@ export default function SetupPage() {
 
         <div style={{ marginBottom: "14px" }}>
           <label className="label">Core Skills (comma-separated)</label>
-          <textarea className="input" value={profile.skills} onChange={e => setProfile({...profile, skills: e.target.value})} style={{ minHeight: "75px", resize: "vertical" }} placeholder="Python, React, AWS, SQL..." />
+          <textarea className="input" value={profile.skills} onChange={e => setProfile({ ...profile, skills: e.target.value })} style={{ minHeight: "75px", resize: "vertical" }} placeholder="Python, React, AWS, SQL..." />
         </div>
 
         <div>
           <label className="label">Key Achievement</label>
-          <input className="input" type="text" value={profile.achieve} onChange={e => setProfile({...profile, achieve: e.target.value})} placeholder="Increased revenue by 30%..." />
+          <input className="input" type="text" value={profile.achieve} onChange={e => setProfile({ ...profile, achieve: e.target.value })} />
         </div>
       </div>
 
@@ -169,12 +179,12 @@ export default function SetupPage() {
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "14px", marginBottom: "18px" }}>
           <div>
-            <label className="label">Min. Expected Salary</label>
-            <input className="input" type="text" value={profile.minSal} onChange={e => setProfile({...profile, minSal: e.target.value})} placeholder="e.g. $70k, ₹12 LPA..." />
+            <label className="label">Expected Salary</label>
+            <input className="input" type="text" value={profile.minSal} onChange={e => setProfile({ ...profile, minSal: e.target.value })} placeholder="e.g. ₹12 LPA" />
           </div>
           <div>
             <label className="label">Work Preference</label>
-            <select className="input" value={profile.shift} onChange={e => setProfile({...profile, shift: e.target.value})}>
+            <select className="input" value={profile.shift} onChange={e => setProfile({ ...profile, shift: e.target.value })}>
               <option value="any">Any</option>
               <option value="remote">Remote Only</option>
               <option value="hybrid">Hybrid</option>
@@ -183,7 +193,7 @@ export default function SetupPage() {
           </div>
           <div>
             <label className="label">Job Type</label>
-            <select className="input" value={profile.jobType} onChange={e => setProfile({...profile, jobType: e.target.value})}>
+            <select className="input" value={profile.jobType} onChange={e => setProfile({ ...profile, jobType: e.target.value })}>
               <option value="Full-time">Full-time</option>
               <option value="Contract">Contract</option>
               <option value="Internship">Internship</option>
