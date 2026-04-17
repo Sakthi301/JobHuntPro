@@ -1,22 +1,23 @@
 // ═══════════════════════════════════════════════════════════
-// Navbar — Desktop Navigation with Theme Toggle
+// Navbar — Desktop Navigation with Premium Pro Theme
 // ═══════════════════════════════════════════════════════════
 // Features:
-// - Brand logo with gradient text
-// - Tab navigation links with active indicator
-// - Dark/Light mode toggle button (Sun/Moon)
-// - User avatar + logout button
-// - Responsive: hides tabs on mobile (MobileNav takes over)
+// - Dynamic brand: "MyAIJobHunt" (free) → "MyAIJobHuntPro" (pro)
+// - Gold-tinted premium chrome for Pro users
+// - Animated Pro badge with golden glow ring
+// - Gold avatar ring for Pro users
+// - Tab navigation with active indicator
+// - Dark/Light mode toggle
 // ═══════════════════════════════════════════════════════════
 
 "use client";
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Settings, Search, BarChart2, CheckSquare, FileText, LogOut, Sun, Moon, Crown } from "lucide-react";
+import { Settings, Search, BarChart2, CheckSquare, FileText, LogOut, Sun, Moon, Crown, MessageSquare, FileSearch, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/components/ThemeProvider";
 import { motion } from "motion/react";
 
 // Navigation items
@@ -28,6 +29,12 @@ const NAV_ITEMS = [
   { name: "Cover",     path: "/cover",     icon: FileText },
 ];
 
+// Pro-only navigation items (hidden for free users)
+const PRO_NAV_ITEMS = [
+  { name: "Interview", path: "/interview", icon: MessageSquare },
+  { name: "ATS Score", path: "/ats",       icon: FileSearch },
+];
+
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
@@ -35,7 +42,15 @@ export default function Navbar() {
   const [userName, setUserName] = useState("");
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const [userPlan, setUserPlan] = useState("free");
+  // Load cached plan instantly to prevent free→pro flash on refresh
+  const [userPlan, setUserPlan] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("userPlan") || "free";
+    }
+    return "free";
+  });
+
+  const isPro = userPlan !== "free";
 
   // Wait for hydration before showing theme toggle
   useEffect(() => setMounted(true), []);
@@ -49,30 +64,36 @@ export default function Navbar() {
       } else {
         setUserName(user?.email?.split("@")[0] || "User");
       }
-      // Fetch plan
+      // Fetch plan and cache it
       if (user) {
         const { data: profile } = await supabase.from("profiles").select("plan").eq("id", user.id).single();
-        if (profile?.plan) setUserPlan(profile.plan);
+        if (profile?.plan) {
+          setUserPlan(profile.plan);
+          localStorage.setItem("userPlan", profile.plan);
+        }
       }
     };
     getUser();
   }, []);
 
-  // Sign out
+  // Sign out — clear cached plan
   const handleLogout = async () => {
+    localStorage.removeItem("userPlan");
     await supabase.auth.signOut();
     router.push("/login");
   };
 
   return (
-    <nav style={{
-      position: "sticky", top: 0, zIndex: 100,
-      display: "flex", alignItems: "center", justifyContent: "space-between",
-      padding: "0 28px", height: "62px",
-      background: "var(--navbar-bg)", backdropFilter: "blur(24px)",
-      borderBottom: "1px solid var(--border)",
-      transition: "background 0.3s, border-color 0.3s"
-    }}>
+    <nav
+      className={isPro ? "navbar-pro" : ""}
+      style={{
+        position: "sticky", top: 0, zIndex: 100,
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "0 28px", height: "62px",
+        background: "var(--navbar-bg)", backdropFilter: "blur(24px)",
+        borderBottom: "1px solid var(--border)",
+        transition: "background 0.3s, border-color 0.3s"
+      }}>
 
       {/* ─── Brand Logo ─── */}
       <Link href="/" style={{ textDecoration: 'none' }}>
@@ -81,14 +102,36 @@ export default function Navbar() {
             src="/logo.svg"
             alt="MyAIJobHunt Logo"
             whileHover={{ rotate: 10, scale: 1.1 }}
-            style={{ width: "36px", height: "36px", flexShrink: 0 }}
+            style={{
+              width: "36px", height: "36px", flexShrink: 0,
+              ...(isPro ? { filter: "drop-shadow(0 0 8px rgba(212,168,67,0.4))" } : {})
+            }}
           />
-          <div>
-            <div style={{
-              fontFamily: "var(--font-heading)", fontSize: "20px", fontWeight: 800,
-              background: "linear-gradient(90deg, #FF7A18 0%, #FFC837 40%, #4FACFE 70%, #007BFF 100%)",
-              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent"
-            }}>MyAIJobHunt</div>
+          <div style={{ display: "flex", alignItems: "baseline", gap: "0px" }}>
+            <div
+              className={isPro ? "pro-brand-text" : ""}
+              style={{
+                fontFamily: "var(--font-heading)", fontSize: "20px", fontWeight: 800,
+                ...(!isPro ? {
+                  background: "linear-gradient(90deg, #FF7A18 0%, #FFC837 40%, #4FACFE 70%, #007BFF 100%)",
+                  WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+                } : {})
+              }}
+            >MyAIJobHunt</div>
+            {isPro && (
+              <motion.span
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1 }}
+                style={{
+                  fontFamily: "var(--font-heading)", fontSize: "11px", fontWeight: 800,
+                  background: "linear-gradient(135deg, #D4A843, #F5D76E)",
+                  color: "#1a1200",
+                  padding: "2px 7px", borderRadius: "6px",
+                  marginLeft: "4px", letterSpacing: "0.3px",
+                  boxShadow: "0 0 12px rgba(212,168,67,0.3)",
+                }}
+              >PRO</motion.span>
+            )}
           </div>
         </div>
       </Link>
@@ -96,6 +139,35 @@ export default function Navbar() {
       {/* ─── Desktop Tab Links ─── */}
       <div className="nav-tabs" style={{ display: "flex", gap: "2px" }}>
         {NAV_ITEMS.map((item) => {
+          const isActive = pathname === item.path;
+          const Icon = item.icon;
+          // Pro users get gold active states everywhere
+          const activeColor = isPro ? "var(--pro-gold1)" : "var(--ember)";
+          const activeBg = isPro ? "rgba(212,168,67,0.08)" : "rgba(255, 107, 53, 0.1)";
+          const activeBorder = isPro ? "rgba(212,168,67,0.2)" : "rgba(255, 107, 53, 0.2)";
+          return (
+            <Link key={item.path} href={item.path}>
+              <motion.div
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.97 }}
+                style={{
+                  display: "flex", alignItems: "center", gap: "7px",
+                  padding: "8px 14px", borderRadius: "9px",
+                  fontSize: "13px", fontWeight: 500,
+                  color: isActive ? activeColor : "var(--sub)",
+                  background: isActive ? activeBg : "transparent",
+                  border: isActive ? `1px solid ${activeBorder}` : "1px solid transparent",
+                  transition: "all .2s"
+                }}
+              >
+                <Icon size={15} /> {item.name}
+              </motion.div>
+            </Link>
+          );
+        })}
+
+        {/* Pro-only tabs — hidden for free users */}
+        {isPro && PRO_NAV_ITEMS.map((item) => {
           const isActive = pathname === item.path;
           const Icon = item.icon;
           return (
@@ -107,13 +179,14 @@ export default function Navbar() {
                   display: "flex", alignItems: "center", gap: "7px",
                   padding: "8px 14px", borderRadius: "9px",
                   fontSize: "13px", fontWeight: 500,
-                  color: isActive ? "var(--ember)" : "var(--sub)",
-                  background: isActive ? "rgba(255, 107, 53, 0.1)" : "transparent",
-                  border: isActive ? "1px solid rgba(255, 107, 53, 0.2)" : "1px solid transparent",
+                  color: isActive ? "var(--pro-gold2)" : "var(--sub)",
+                  background: isActive ? "rgba(212,168,67,0.1)" : "transparent",
+                  border: isActive ? "1px solid rgba(212,168,67,0.25)" : "1px solid transparent",
                   transition: "all .2s"
                 }}
               >
                 <Icon size={15} /> {item.name}
+                <Sparkles size={10} style={{ color: "var(--pro-gold2)" }} />
               </motion.div>
             </Link>
           );
@@ -124,15 +197,17 @@ export default function Navbar() {
       <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
 
         {/* Plan Badge */}
-        {userPlan && userPlan !== "free" ? (
+        {isPro ? (
           <motion.div
             whileHover={{ scale: 1.05 }}
+            className="pro-badge-glow"
             style={{
               display: "flex", alignItems: "center", gap: "5px",
-              padding: "5px 12px", borderRadius: "8px",
-              background: "rgba(245,200,66,0.1)", border: "1px solid rgba(245,200,66,0.3)",
+              padding: "5px 14px", borderRadius: "8px",
+              background: "linear-gradient(135deg, rgba(212,168,67,0.15), rgba(245,215,110,0.08))",
+              border: "1px solid rgba(212,168,67,0.35)",
               fontSize: "11px", fontWeight: 700, fontFamily: "var(--font-heading)",
-              color: "var(--gold)", textTransform: "uppercase", letterSpacing: "0.5px",
+              color: "var(--pro-gold2)", textTransform: "uppercase", letterSpacing: "0.5px",
             }}
           >
             <Crown size={13} /> PRO
@@ -163,8 +238,9 @@ export default function Navbar() {
             title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
             style={{
               width: "36px", height: "36px", borderRadius: "10px",
-              background: "var(--glass)", border: "1px solid var(--border)",
-              color: theme === "dark" ? "var(--gold)" : "var(--blue)",
+              background: "var(--glass)",
+              border: isPro ? "1px solid var(--pro-border)" : "1px solid var(--border)",
+              color: theme === "dark" ? (isPro ? "var(--pro-gold2)" : "var(--gold)") : "var(--blue)",
               cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
               transition: "all 0.2s"
             }}
@@ -177,14 +253,21 @@ export default function Navbar() {
         <div style={{
           display: "flex", alignItems: "center", gap: "10px",
           padding: "5px 10px 5px 5px", borderRadius: "10px",
-          background: "var(--glass)", border: "1px solid var(--border)"
+          background: "var(--glass)",
+          border: isPro ? "1px solid var(--pro-border)" : "1px solid var(--border)"
         }}>
-          <div style={{
-            width: "30px", height: "30px", borderRadius: "8px",
-            background: "linear-gradient(135deg, var(--ember), var(--ember2))",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontFamily: "var(--font-heading)", fontSize: "13px", fontWeight: 800, color: "#fff"
-          }}>
+          <div
+            className={isPro ? "pro-avatar-ring" : ""}
+            style={{
+              width: "30px", height: "30px", borderRadius: "8px",
+              background: isPro
+                ? "linear-gradient(135deg, #D4A843, #F5D76E)"
+                : "linear-gradient(135deg, var(--ember), var(--ember2))",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontFamily: "var(--font-heading)", fontSize: "13px", fontWeight: 800,
+              color: isPro ? "#1a1200" : "#fff"
+            }}
+          >
             {userName.charAt(0).toUpperCase()}
           </div>
 

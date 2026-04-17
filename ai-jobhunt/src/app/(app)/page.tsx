@@ -23,6 +23,7 @@ import PricingModal from "@/components/PricingModal";
 
 // Module-level cache to keep jobs alive when navigating between tabs
 let cachedJobs: JobScanned[] = [];
+let cachedUserId: string | null = null;
 
 export default function DashboardPage() {
   const [jobs, setJobs] = useState<JobScanned[]>(cachedJobs);
@@ -37,13 +38,22 @@ export default function DashboardPage() {
     async function loadData() {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
+        if (cachedUserId !== user.id) {
+          cachedJobs = [];
+          cachedUserId = user.id;
+          setJobs([]);
+        }
         const { data } = await supabase.from("profiles").select("*").eq("id", user.id).single();
         setProfile(data);
+      } else {
+        cachedJobs = [];
+        cachedUserId = null;
+        setJobs([]);
       }
       setLoadingProfile(false);
     }
     loadData();
-  }, []);
+  }, [supabase.auth]);
 
   // Listen for Navbar "Upgrade" button click
   useEffect(() => {
@@ -131,8 +141,19 @@ export default function DashboardPage() {
     );
   }
 
+  const isPro = profile?.plan && profile.plan !== "free";
+
   return (
-    <div style={{ maxWidth: "1300px", margin: "0 auto" }}>
+    <div className={isPro ? "pro-page" : ""} style={{ maxWidth: "1300px", margin: "0 auto", position: "relative" }}>
+
+      {/* Pro Aurora Background (only for pro users) */}
+      {isPro && (
+        <div className="pro-aurora">
+          <div className="pro-aurora-blob pro-blob-1" />
+          <div className="pro-aurora-blob pro-blob-2" />
+          <div className="pro-aurora-blob pro-blob-3" />
+        </div>
+      )}
 
       {/* ─── Stats Row ─── */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "14px", marginBottom: "24px" }}>

@@ -1,27 +1,46 @@
-// ═══════════════════════════════════════════════════════════
-// Theme Provider — Dark / Light Mode System
-// ═══════════════════════════════════════════════════════════
-// Uses next-themes to persist user's theme choice.
-// Wraps the entire app to provide theme context.
-// ═══════════════════════════════════════════════════════════
-
 "use client";
 
-import { ThemeProvider as NextThemesProvider } from "next-themes";
+import React, { createContext, useContext, useEffect, useState } from "react";
 
-export default function ThemeProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+type ThemeContextType = {
+  theme: string;
+  setTheme: (theme: string) => void;
+};
+
+const ThemeContext = createContext<ThemeContextType>({
+  theme: "dark",
+  setTheme: () => {},
+});
+
+export function useTheme() {
+  return useContext(ThemeContext);
+}
+
+export default function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const [theme, setThemeState] = useState("dark");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    const stored = localStorage.getItem("theme");
+    if (stored) {
+      setThemeState(stored);
+      document.documentElement.setAttribute("data-theme", stored);
+    } else {
+      document.documentElement.setAttribute("data-theme", "dark");
+    }
+  }, []);
+
+  const setTheme = (newTheme: string) => {
+    setThemeState(newTheme);
+    localStorage.setItem("theme", newTheme);
+    document.documentElement.setAttribute("data-theme", newTheme);
+  };
+
+  // Prevent hydration mismatch by using a fixed initial theme until mounted
   return (
-    <NextThemesProvider
-      attribute="data-theme"     // Sets data-theme="dark" or "light" on <html>
-      defaultTheme="dark"         // Start in dark mode
-      enableSystem={true}         // Respect system preference
-      disableTransitionOnChange={false} // Smooth transition when toggling
-    >
+    <ThemeContext.Provider value={{ theme: mounted ? theme : "dark", setTheme }}>
       {children}
-    </NextThemesProvider>
+    </ThemeContext.Provider>
   );
 }

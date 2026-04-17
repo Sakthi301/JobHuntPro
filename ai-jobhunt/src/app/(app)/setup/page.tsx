@@ -16,6 +16,7 @@ import { useRouter } from "next/navigation";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { motion } from "motion/react";
 import { toast } from "sonner";
+import { Upload, Crown, Loader2 } from "lucide-react";
 
 export default function SetupPage() {
   // --- State ---
@@ -29,6 +30,9 @@ export default function SetupPage() {
   const [locInput, setLocInput] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [userPlan, setUserPlan] = useState("free");
+  const [parsing, setParsing] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // AutoAnimate refs for chip containers
   const [rolesRef] = useAutoAnimate();
@@ -55,6 +59,7 @@ export default function SetupPage() {
         });
         setRoles(data.target_roles || []);
         setLocs(data.target_locations || []);
+        if (data.plan) setUserPlan(data.plan);
       }
       setLoading(false);
     }
@@ -74,6 +79,47 @@ export default function SetupPage() {
   };
   const removeRole = (r: string) => setRoles(roles.filter(x => x !== r));
   const removeLoc = (l: string) => setLocs(locs.filter(x => x !== l));
+
+  // --- Resume Upload Handler (Pro Only) ---
+  const handleResumeUpload = async (file: File) => {
+    setParsing(true);
+    toast.loading("🤖 AI is reading your resume...", { id: "resume" });
+
+    try {
+      const formData = new FormData();
+      formData.append("resume", file);
+
+      const res = await fetch("/api/resume-parse", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+
+      if (data.success && data.data) {
+        const d = data.data;
+        setProfile({
+          name: d.name || profile.name,
+          exp: d.experience || profile.exp,
+          role: d.current_role || profile.role,
+          industry: d.industry || profile.industry,
+          skills: d.skills || profile.skills,
+          achieve: d.achievement || profile.achieve,
+          minSal: d.min_salary || profile.minSal,
+          shift: profile.shift,
+          jobType: profile.jobType,
+        });
+        if (d.target_roles?.length) setRoles(d.target_roles);
+        if (d.target_locations?.length) setLocs(d.target_locations);
+        toast.success("Resume parsed! All fields auto-filled ✅", { id: "resume" });
+      } else {
+        toast.error("Failed: " + (data.error || "Unknown error"), { id: "resume" });
+      }
+    } catch (e: any) {
+      toast.error("Error: " + e.message, { id: "resume" });
+    } finally {
+      setParsing(false);
+    }
+  };
 
   // --- Save to Supabase ---
   const saveProfile = async () => {
@@ -137,6 +183,57 @@ export default function SetupPage() {
           Set up your profile once. AI uses this data to scan, score, and generate — all stored securely.
         </p>
       </div>
+
+      {/* ─── Pro: Resume Upload Zone (hidden for free users) ─── */}
+      {userPlan !== "free" && (
+        <motion.div
+          className="glass-card pro-upload-zone"
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+          style={{
+            padding: "28px", marginBottom: "16px", textAlign: "center",
+            cursor: "pointer", position: "relative",
+          }}
+          onClick={() => fileInputRef.current?.click()}
+          onDragOver={e => { e.preventDefault(); e.stopPropagation(); }}
+          onDrop={e => {
+            e.preventDefault(); e.stopPropagation();
+            const file = e.dataTransfer.files[0];
+            if (file) handleResumeUpload(file);
+          }}
+        >
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf,.doc,.docx,.txt"
+            style={{ display: "none" }}
+            onChange={e => {
+              const file = e.target.files?.[0];
+              if (file) handleResumeUpload(file);
+            }}
+          />
+          <div style={{
+            display: "inline-flex", alignItems: "center", gap: "6px", marginBottom: "12px",
+            padding: "4px 12px", borderRadius: "20px",
+            background: "linear-gradient(135deg, rgba(212,168,67,0.12), rgba(245,215,110,0.06))",
+            border: "1px solid rgba(212,168,67,0.25)",
+          }}>
+            <Crown size={12} style={{ color: "var(--pro-gold2)" }} />
+            <span style={{ fontSize: "10px", fontWeight: 700, fontFamily: "var(--font-heading)", color: "var(--pro-gold2)", textTransform: "uppercase", letterSpacing: "1px" }}>Pro Feature</span>
+          </div>
+          {parsing ? (
+            <>
+              <Loader2 size={32} style={{ color: "var(--pro-gold1)", animation: "spin 1s linear infinite", marginBottom: "8px" }} />
+              <div style={{ fontSize: "14px", fontWeight: 600, color: "var(--text)" }}>AI is reading your resume...</div>
+            </>
+          ) : (
+            <>
+              <Upload size={32} style={{ color: "var(--pro-gold1)", marginBottom: "8px" }} />
+              <div style={{ fontSize: "14px", fontWeight: 600, color: "var(--text)" }}>Upload Resume to Auto-Fill</div>
+              <p style={{ fontSize: "12px", color: "var(--sub)", marginTop: "4px" }}>Drag & drop a PDF or Word file here, or click</p>
+            </>
+          )}
+        </motion.div>
+      )}
 
       {/* ─── Profile Section ─── */}
       <div className="glass-card" style={{ padding: "24px", marginBottom: "16px" }}>

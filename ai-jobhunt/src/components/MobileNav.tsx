@@ -1,16 +1,18 @@
 // ═══════════════════════════════════════════════════════════
-// MobileNav — Bottom Tab Bar (Responsive, Motion-animated)
+// MobileNav — Bottom Tab Bar with Premium Pro Theme
 // ═══════════════════════════════════════════════════════════
-// Fixed bottom navigation for mobile screens (≤768px).
-// Uses Motion for tap animations on each icon.
+// Gold-tinted bottom bar for Pro users, gold active states,
+// and premium sparkle indicators on pro-only tabs.
 // ═══════════════════════════════════════════════════════════
 
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Settings, Search, BarChart2, CheckSquare, FileText } from "lucide-react";
+import { Settings, Search, BarChart2, CheckSquare, FileText, MessageSquare, FileSearch, Sparkles } from "lucide-react";
 import { motion } from "motion/react";
+import { createClient } from "@/lib/supabase/client";
+import { useEffect, useState } from "react";
 
 const NAV_ITEMS = [
   { name: "Setup",     path: "/setup",     icon: Settings },
@@ -20,11 +22,46 @@ const NAV_ITEMS = [
   { name: "Cover",     path: "/cover",     icon: FileText },
 ];
 
+const PRO_NAV_ITEMS = [
+  { name: "Interview", path: "/interview", icon: MessageSquare },
+  { name: "ATS",       path: "/ats",       icon: FileSearch },
+];
+
 export default function MobileNav() {
   const pathname = usePathname();
+  // Load cached plan instantly to prevent free→pro flash
+  const [userPlan, setUserPlan] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("userPlan") || "free";
+    }
+    return "free";
+  });
+  const supabase = createClient();
+
+  const isPro = userPlan !== "free";
+
+  useEffect(() => {
+    async function loadPlan() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data } = await supabase.from("profiles").select("plan").eq("id", user.id).single();
+        if (data?.plan) {
+          setUserPlan(data.plan);
+          localStorage.setItem("userPlan", data.plan);
+        }
+      }
+    }
+    loadPlan();
+  }, []);
+
+  const allItems = isPro
+    ? [...NAV_ITEMS, ...PRO_NAV_ITEMS]
+    : NAV_ITEMS;
+
+  const isProItem = (path: string) => PRO_NAV_ITEMS.some(p => p.path === path);
 
   return (
-    <div className="mobile-nav" style={{
+    <div className={`mobile-nav ${isPro ? "mobile-nav-pro" : ""}`} style={{
       position: "fixed", bottom: 0, left: 0, right: 0,
       background: "var(--navbar-bg)", backdropFilter: "blur(24px)",
       borderTop: "1px solid var(--border)",
@@ -32,9 +69,15 @@ export default function MobileNav() {
       zIndex: 100, transition: "background 0.3s"
     }}>
       <div style={{ display: "flex", justifyContent: "space-around" }}>
-        {NAV_ITEMS.map((item) => {
+        {allItems.map((item) => {
           const isActive = pathname === item.path;
           const Icon = item.icon;
+          const isProTab = isProItem(item.path);
+
+          // Gold active color for all tabs if pro, or just for pro tabs
+          const activeColor = isPro ? "var(--pro-gold2)" : "var(--ember)";
+          const dotColor = isPro ? "var(--pro-gold1)" : "var(--ember)";
+
           return (
             <Link key={item.path} href={item.path}>
               <motion.div
@@ -42,11 +85,21 @@ export default function MobileNav() {
                 style={{
                   display: "flex", flexDirection: "column", alignItems: "center", gap: "3px",
                   fontSize: "9px", padding: "6px 12px",
-                  color: isActive ? "var(--ember)" : "var(--muted)",
-                  transition: "color .2s"
+                  color: isActive ? activeColor : "var(--muted)",
+                  transition: "color .2s",
+                  position: "relative",
                 }}
               >
-                <Icon size={20} />
+                <div style={{ position: "relative" }}>
+                  <Icon size={20} />
+                  {/* Sparkle badge for pro-only tabs */}
+                  {isProTab && (
+                    <Sparkles size={8} style={{
+                      position: "absolute", top: "-3px", right: "-6px",
+                      color: "var(--pro-gold2)",
+                    }} />
+                  )}
+                </div>
                 <span style={{ textTransform: "uppercase", letterSpacing: "0.5px" }}>{item.name}</span>
                 {/* Active dot indicator */}
                 {isActive && (
@@ -54,7 +107,8 @@ export default function MobileNav() {
                     layoutId="mobile-indicator"
                     style={{
                       width: "4px", height: "4px", borderRadius: "50%",
-                      background: "var(--ember)", marginTop: "1px"
+                      background: dotColor, marginTop: "1px",
+                      boxShadow: isPro ? "0 0 8px rgba(212,168,67,0.4)" : "none",
                     }}
                   />
                 )}

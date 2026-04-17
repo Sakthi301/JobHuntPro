@@ -355,3 +355,221 @@ a { color: inherit; text-decoration: none; }
 [data-sonner-toaster] {
   font-family: var(--font-body) !important;
 }
+
+
+/* ═══════════════════════════════════════════════════════════
+   PRO PREMIUM THEME — Apple-Inspired Exclusive Layer
+   ═══════════════════════════════════════════════════════════
+   Gold-tinted glass, aurora animations, metallic shimmer,
+   and premium micro-interactions for Pro users only.
+   ═══════════════════════════════════════════════════════════ */
+
+/* ─── Pro Design Tokens ─── */
+:root {
+  --pro-gold1: #D4A843;
+  --pro-gold2: #F5D76E;
+  --pro-gold3: #FFE8A3;
+  --pro-glass: rgba(212, 168, 67, 0.035);
+  --pro-border: rgba(212, 168, 67, 0.12);
+  --pro-border2: rgba(212, 168, 67, 0.22);
+  --pro-glow: 0 0 40px rgba(212, 168, 67, 0.12);
+  --pro-glow-strong: 0 0 60px rgba(212, 168, 67, 0.2), 0 0 120px rgba(212, 168, 67, 0.06);
+  --pro-gradient: linear-gradient(135deg, #D4A843, #F5D76E, #D4A843);
+  --pro-gradient2: linear-gradient(135deg, #1a1510 0%, #0d0b08 50%, #141008 100%);
+}
+
+/* ─── Pro Keyframe Animations ─── */
+@keyframes aurora-shift {
+  0%   { transform: translate(0, 0) scale(1); }
+  25%  { transform: translate(30px, -40px) scale(1.1); }
+  50%  { transform: translate(-20px, 20px) scale(0.95); }
+  75%  { transform: translate(40px, 10px) scale(1.05); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+@keyframes gold-shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes pro-glow-pulse {
+  0%, 100% { box-shadow: 0 0 12px rgba(212, 168, 67, 0.15); }
+  50%      { box-shadow: 0 0 24px rgba(212, 168, 67, 0.3); }
+}
+
+@keyframes border-glow {
+  0%, 100% { border-color: rgba(212, 168, 67, 0.12); }
+  50%      { border-color: rgba(212, 168, 67, 0.3); }
+}
+
+@keyframes float-subtle {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-4px); }
+}
+
+/* ─── Pro Aurora Background Blobs ─── */
+.pro-aurora {
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 0; overflow: hidden;
+}
+
+.pro-aurora-blob {
+  position: absolute; border-radius: 50%;
+  filter: blur(160px); opacity: 0.08;
+  animation: aurora-shift 20s ease-in-out infinite;
+}
+
+.pro-blob-1 {
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, #D4A843, transparent 70%);
+  top: -200px; left: -100px;
+  animation-delay: 0s;
+}
+
+.pro-blob-2 {
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, #A78BFA, transparent 70%);
+  bottom: -150px; right: -100px;
+  animation-delay: -7s;
+}
+
+.pro-blob-3 {
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, #00D9AA, transparent 70%);
+  top: 40%; left: 50%;
+  animation-delay: -14s;
+}
+
+/* ─── Pro Glass Card Override ─── */
+.pro-page .glass-card {
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid var(--pro-border);
+  backdrop-filter: blur(20px);
+  box-shadow: var(--pro-glow), var(--card-shadow);
+}
+
+.pro-page .glass-card:hover {
+  border-color: var(--pro-border2);
+  box-shadow: var(--pro-glow-strong), var(--card-shadow);
+}
+
+/* ─── Pro Stat Card Override ─── */
+.pro-page .stat-card {
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid var(--pro-border);
+  box-shadow: var(--pro-glow);
+}
+
+.pro-page .stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--pro-glow-strong);
+}
+
+/* ─── Pro Input Override ─── */
+.pro-page .input:focus {
+  border-color: var(--pro-gold1);
+  box-shadow: 0 0 0 3px rgba(212, 168, 67, 0.12);
+}
+
+/* ─── Pro Section Label Override ─── */
+.pro-page .section-label {
+  color: var(--pro-gold1);
+}
+
+/* ─── Pro Primary Button Override ─── */
+.pro-page .btn-primary {
+  background: linear-gradient(135deg, #D4A843, #F5D76E, #D4A843);
+  background-size: 200% auto;
+  animation: gold-shimmer 3s linear infinite;
+  color: #1a1200;
+  font-weight: 700;
+  box-shadow: 0 8px 32px rgba(212, 168, 67, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.pro-page .btn-primary:hover {
+  box-shadow: 0 12px 40px rgba(212, 168, 67, 0.45);
+}
+
+/* ─── Pro Badge (animated golden glow ring) ─── */
+.pro-badge-glow {
+  animation: pro-glow-pulse 2.5s ease-in-out infinite;
+}
+
+/* ─── Pro Navbar Override ─── */
+.navbar-pro {
+  background: rgba(12, 10, 6, 0.92) !important;
+  border-bottom: 1px solid var(--pro-border) !important;
+}
+
+[data-theme="light"] .navbar-pro {
+  background: rgba(255, 252, 245, 0.94) !important;
+  border-bottom: 1px solid rgba(212, 168, 67, 0.15) !important;
+}
+
+/* ─── Pro Mobile Nav Override ─── */
+.mobile-nav-pro {
+  background: rgba(12, 10, 6, 0.95) !important;
+  border-top: 1px solid var(--pro-border) !important;
+}
+
+[data-theme="light"] .mobile-nav-pro {
+  background: rgba(255, 252, 245, 0.96) !important;
+  border-top: 1px solid rgba(212, 168, 67, 0.15) !important;
+}
+
+/* ─── Pro Avatar Ring ─── */
+.pro-avatar-ring {
+  box-shadow: 0 0 0 2px var(--pro-gold1), 0 0 12px rgba(212, 168, 67, 0.3);
+}
+
+/* ─── Pro Upload Zone ─── */
+.pro-upload-zone {
+  border: 2px dashed var(--pro-border2) !important;
+  animation: border-glow 3s ease-in-out infinite;
+}
+
+.pro-upload-zone:hover {
+  border-color: var(--pro-gold1) !important;
+  background: rgba(212, 168, 67, 0.03) !important;
+}
+
+/* ─── Pro Chip Style ─── */
+.pro-page .chip-ember {
+  background: rgba(212, 168, 67, 0.08);
+  border-color: var(--pro-gold1);
+  color: var(--pro-gold2);
+}
+
+/* ─── Pro Page Title Gradient ─── */
+.pro-title-gradient {
+  background: linear-gradient(135deg, #D4A843 0%, #F5D76E 40%, #FFE8A3 60%, #D4A843 100%) !important;
+  background-size: 200% auto;
+  animation: gold-shimmer 4s linear infinite;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  color: transparent !important;
+}
+
+/* ─── Pro Brand Text (Navbar) ─── */
+.pro-brand-text {
+  background: linear-gradient(90deg, #C89B3C, #F0D56A, #C89B3C) !important;
+  background-size: 200% auto;
+  animation: gold-shimmer 3s linear infinite;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  color: transparent !important;
+}
+
+/* ─── Pro Score Gauge Glow ─── */
+.pro-score-glow {
+  filter: drop-shadow(0 0 12px rgba(212, 168, 67, 0.3));
+}
+
+/* ─── Floating animation for pro hero elements ─── */
+.pro-float {
+  animation: float-subtle 4s ease-in-out infinite;
+}
+
