@@ -1,8 +1,8 @@
 // ═══════════════════════════════════════════════════════════
 // MobileNav — Bottom Tab Bar with Premium Pro Theme
 // ═══════════════════════════════════════════════════════════
-// Gold-tinted bottom bar for Pro users, gold active states,
-// and premium sparkle indicators on pro-only tabs.
+// All tabs visible for all users (freemium model).
+// Gold-tinted bottom bar for Pro users, gold active states.
 // ═══════════════════════════════════════════════════════════
 
 "use client";
@@ -20,9 +20,6 @@ const NAV_ITEMS = [
   { name: "Analytics", path: "/analytics", icon: BarChart2 },
   { name: "Tracker",   path: "/tracker",   icon: CheckSquare },
   { name: "Cover",     path: "/cover",     icon: FileText },
-];
-
-const PRO_NAV_ITEMS = [
   { name: "Interview", path: "/interview", icon: MessageSquare },
   { name: "ATS",       path: "/ats",       icon: FileSearch },
 ];
@@ -54,11 +51,7 @@ export default function MobileNav() {
     loadPlan();
   }, []);
 
-  const allItems = isPro
-    ? [...NAV_ITEMS, ...PRO_NAV_ITEMS]
-    : NAV_ITEMS;
 
-  const isProItem = (path: string) => PRO_NAV_ITEMS.some(p => p.path === path);
 
   return (
     <div className={`mobile-nav ${isPro ? "mobile-nav-pro" : ""}`} style={{
@@ -69,11 +62,9 @@ export default function MobileNav() {
       zIndex: 100, transition: "background 0.3s"
     }}>
       <div style={{ display: "flex", justifyContent: "space-around" }}>
-        {allItems.map((item) => {
+        {NAV_ITEMS.map((item) => {
           const isActive = pathname === item.path;
           const Icon = item.icon;
-          const isProTab = isProItem(item.path);
-
           // Gold active color for all tabs if pro, or just for pro tabs
           const activeColor = isPro ? "var(--pro-gold2)" : "var(--ember)";
           const dotColor = isPro ? "var(--pro-gold1)" : "var(--ember)";
@@ -92,13 +83,6 @@ export default function MobileNav() {
               >
                 <div style={{ position: "relative" }}>
                   <Icon size={20} />
-                  {/* Sparkle badge for pro-only tabs */}
-                  {isProTab && (
-                    <Sparkles size={8} style={{
-                      position: "absolute", top: "-3px", right: "-6px",
-                      color: "var(--pro-gold2)",
-                    }} />
-                  )}
                 </div>
                 <span style={{ textTransform: "uppercase", letterSpacing: "0.5px" }}>{item.name}</span>
                 {/* Active dot indicator */}

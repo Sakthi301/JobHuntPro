@@ -15,8 +15,8 @@ import { Toaster } from "sonner";
 
 // SEO metadata
 export const metadata: Metadata = {
-  title: "MyAIJobHunt",
-  description: "AI-powered career command center. Scan jobs, get AI match scores, and generate cover notes.",
+  title: "SkillScan",
+  description: "AI-powered resume analysis and skills matching software. Optimize your professional profile with advanced AI analytics.",
   icons: { icon: "/logo.svg" },
 };
 

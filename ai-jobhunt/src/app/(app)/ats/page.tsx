@@ -1,12 +1,13 @@
 // ═══════════════════════════════════════════════════════════
-// ATS Resume Score Page — PRO ONLY
+// ATS Resume Score Page — Freemium (5 free uses)
 // ═══════════════════════════════════════════════════════════
 // Features:
-// - Paste resume + job description → AI scores compatibility
+// - Upload resume + paste job description → AI scores compatibility
 // - Circular score gauge with color coding
 // - Matched & missing keyword tags
 // - Section-by-section feedback cards
 // - Improvement suggestions list
+// - Free users get 5 uses, then upgrade prompt
 // ═══════════════════════════════════════════════════════════
 
 "use client";
@@ -50,6 +51,9 @@ export default function ATSScorePage() {
     load();
   }, []);
 
+  const isPro = profile?.plan && profile.plan !== "free";
+  const usesLeft = Math.max(0, 5 - (profile?.usage_count || 0));
+
   const handleAnalyze = async () => {
     if (!resumeFile) {
       toast.error("Please upload your resume! 🛑");
@@ -77,9 +81,15 @@ export default function ATSScorePage() {
 
       if (data.success) {
         setResult(data.analysis);
+        // Refresh profile to update usage count
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: updated } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+          setProfile(updated);
+        }
         toast.success("ATS Analysis complete! ✅", { id: "ats" });
-      } else if (data.error === "pro_required") {
-        toast.error("This feature is for Pro users only! 👑", { id: "ats" });
+      } else if (data.error === "limit_reached") {
+        toast.error("You've used all 5 free uses! Upgrade to continue. 🔒", { id: "ats" });
         setShowPricing(true);
       } else {
         toast.error("Failed: " + data.error, { id: "ats" });
@@ -104,35 +114,58 @@ export default function ATSScorePage() {
     score >= 75 ? "var(--teal)" : score >= 50 ? "var(--gold)" : "var(--red)";
 
   return (
-    <div className="pro-page" style={{ maxWidth: "800px", margin: "0 auto", position: "relative" }}>
+    <div className={isPro ? "pro-page" : ""} style={{ maxWidth: "800px", margin: "0 auto", position: "relative" }}>
 
-      {/* Pro Aurora Background */}
-      <div className="pro-aurora">
-        <div className="pro-aurora-blob pro-blob-1" />
-        <div className="pro-aurora-blob pro-blob-2" />
-        <div className="pro-aurora-blob pro-blob-3" />
-      </div>
+      {/* Pro Aurora Background (only for pro users) */}
+      {isPro && (
+        <div className="pro-aurora">
+          <div className="pro-aurora-blob pro-blob-1" />
+          <div className="pro-aurora-blob pro-blob-2" />
+          <div className="pro-aurora-blob pro-blob-3" />
+        </div>
+      )}
 
       {/* Header */}
       <div style={{ textAlign: "center", marginBottom: "32px" }}>
-        <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
-          <motion.div
-            className="pro-badge-glow"
-            style={{
+        {/* Pro badge only for paid users */}
+        {isPro && (
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
+            <motion.div
+              className="pro-badge-glow"
+              style={{
+                display: "flex", alignItems: "center", gap: "6px",
+                padding: "5px 14px", borderRadius: "20px",
+                background: "linear-gradient(135deg, rgba(212,168,67,0.12), rgba(245,215,110,0.06))",
+                border: "1px solid rgba(212,168,67,0.25)",
+                fontSize: "11px", fontWeight: 700, fontFamily: "var(--font-heading)",
+                color: "var(--pro-gold2)", textTransform: "uppercase", letterSpacing: "1.5px",
+              }}
+            >
+              <Crown size={14} /> Pro — Unlimited
+            </motion.div>
+          </div>
+        )}
+
+        {/* Free tier uses-left badge */}
+        {!isPro && profile && (
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
+            <div style={{
               display: "flex", alignItems: "center", gap: "6px",
               padding: "5px 14px", borderRadius: "20px",
-              background: "linear-gradient(135deg, rgba(212,168,67,0.12), rgba(245,215,110,0.06))",
-              border: "1px solid rgba(212,168,67,0.25)",
+              background: usesLeft > 0 ? "rgba(0,217,170,0.08)" : "rgba(239,68,68,0.08)",
+              border: `1px solid ${usesLeft > 0 ? "rgba(0,217,170,0.3)" : "rgba(239,68,68,0.3)"}`,
               fontSize: "11px", fontWeight: 700, fontFamily: "var(--font-heading)",
-              color: "var(--pro-gold2)", textTransform: "uppercase", letterSpacing: "1.5px",
-            }}
-          >
-            <Crown size={14} /> Pro Feature
-          </motion.div>
-        </div>
+              color: usesLeft > 0 ? "var(--teal)" : "var(--red)",
+              textTransform: "uppercase", letterSpacing: "1.5px",
+            }}>
+              {usesLeft > 0 ? `${usesLeft} free uses left` : "Free uses exhausted"}
+            </div>
+          </div>
+        )}
+
         <h2 className="page-title">
           ATS Resume<br />
-          <em className="pro-title-gradient" style={{ fontStyle: "normal" }}>Score Checker</em>
+          <em className={isPro ? "pro-title-gradient" : ""} style={{ fontStyle: "normal", ...(!isPro ? { background: "linear-gradient(135deg, var(--ember), var(--blue))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" } : {}) }}>Score Checker</em>
         </h2>
         <p className="page-subtitle" style={{ maxWidth: "500px", margin: "8px auto 0" }}>
           Upload your resume and paste a job description — AI scores how well they match for ATS systems.

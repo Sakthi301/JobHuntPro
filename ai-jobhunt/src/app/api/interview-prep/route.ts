@@ -1,9 +1,11 @@
 // ═══════════════════════════════════════════════════════════
 // Interview Prep API — /api/interview-prep
 // ═══════════════════════════════════════════════════════════
-// PRO ONLY: Generates 10 tailored interview questions with
-// ideal answers based on the user's profile, target company,
+// Generates 10 tailored interview questions with ideal
+// answers based on the user's profile, target company,
 // and target role using Groq AI.
+// Free users: 5 total uses (shared across all features).
+// Paid users: Unlimited.
 // ═══════════════════════════════════════════════════════════
 
 import { NextResponse } from 'next/server';
@@ -12,14 +14,27 @@ import { callGroq } from '@/lib/groq';
 
 export async function POST(req: Request) {
   try {
-    // --- Auth + Pro Check ---
+    // --- Auth Check ---
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
 
+    // --- Plan & Usage Limit Check ---
     const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-    if (!profile?.plan || profile.plan === 'free') {
-      return NextResponse.json({ success: false, error: 'pro_required' }, { status: 403 });
+    if (!profile) return NextResponse.json({ success: false, error: 'Profile not found' }, { status: 404 });
+
+    const isPaid = profile.plan && profile.plan !== 'free';
+    const isExpired = isPaid && profile.plan_expiry && new Date(profile.plan_expiry) < new Date();
+
+    // Auto-downgrade expired paid plans back to free
+    if (isExpired) {
+      await supabase.from('profiles').update({ plan: 'free', plan_expiry: null }).eq('id', user.id);
+      profile.plan = 'free';
+    }
+
+    // Free users: max 5 uses (shared across all features)
+    if ((!profile.plan || profile.plan === 'free') && (profile.usage_count || 0) >= 5) {
+      return NextResponse.json({ success: false, error: 'limit_reached' }, { status: 403 });
     }
 
     // --- Parse request ---
@@ -57,6 +72,12 @@ Return ONLY valid JSON array. Schema:
     const raw = await callGroq(prompt);
     const clean = raw.replace(/```json|```/g, '').trim();
     const questions = JSON.parse(clean);
+
+    // --- Increment Usage Count ---
+    await supabase
+      .from('profiles')
+      .update({ usage_count: (profile.usage_count || 0) + 1 })
+      .eq('id', user.id);
 
     return NextResponse.json({ success: true, questions });
 

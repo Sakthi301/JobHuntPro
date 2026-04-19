@@ -5,6 +5,8 @@
 // - type: "custom"     → Cover note from a job description
 // - type: "cold_email" → Cold outreach email to a recruiter
 // Uses Groq AI for generation, increments usage count.
+// Free users: 5 total uses (shared across all features).
+// Paid users: Unlimited.
 // ═══════════════════════════════════════════════════════════
 
 import { NextResponse } from 'next/server';
@@ -18,6 +20,31 @@ export async function POST(req: Request) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // --- Plan & Usage Limit Check ---
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('plan, plan_expiry, usage_count')
+      .eq('id', user.id)
+      .single();
+
+    if (!profileData) {
+      return NextResponse.json({ success: false, error: 'Profile not found' }, { status: 404 });
+    }
+
+    const isPaid = profileData.plan && profileData.plan !== 'free';
+    const isExpired = isPaid && profileData.plan_expiry && new Date(profileData.plan_expiry) < new Date();
+
+    // Auto-downgrade expired paid plans back to free
+    if (isExpired) {
+      await supabase.from('profiles').update({ plan: 'free', plan_expiry: null }).eq('id', user.id);
+      profileData.plan = 'free';
+    }
+
+    // Free users: max 5 uses (shared across all features)
+    if ((!profileData.plan || profileData.plan === 'free') && (profileData.usage_count || 0) >= 5) {
+      return NextResponse.json({ success: false, error: 'limit_reached' }, { status: 403 });
     }
 
     // --- Parse Request Body ---
@@ -73,15 +100,9 @@ Write a 160-190 word cover note:
     const note = await callGroq(prompt);
 
     // --- Increment Usage Count ---
-    const { data: userData } = await supabase
-      .from('profiles')
-      .select('usage_count')
-      .eq('id', user.id)
-      .single();
-
     await supabase
       .from('profiles')
-      .update({ usage_count: (userData?.usage_count || 0) + 1 })
+      .update({ usage_count: (profileData.usage_count || 0) + 1 })
       .eq('id', user.id);
 
     // --- Return Generated Note ---

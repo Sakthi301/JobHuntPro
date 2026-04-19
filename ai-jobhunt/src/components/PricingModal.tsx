@@ -34,9 +34,11 @@ const PLANS = [
     colorAlpha: "rgba(0,217,170,0.1)",
     borderAlpha: "rgba(0,217,170,0.3)",
     features: [
-      "Unlimited AI Job Scans",
+      "Unlimited Profile Scans",
       "AI Cover Notes",
-      "Job Tracker",
+      "Interview Prep Coach",
+      "ATS Resume Scoring",
+      "Opportunity Tracker",
       "Analytics Dashboard",
     ],
     popular: false,
@@ -51,9 +53,11 @@ const PLANS = [
     colorAlpha: "rgba(255,107,53,0.1)",
     borderAlpha: "rgba(255,107,53,0.3)",
     features: [
-      "Unlimited AI Job Scans",
+      "Unlimited Profile Scans",
       "AI Cover Notes",
-      "Job Tracker",
+      "Interview Prep Coach",
+      "ATS Resume Scoring",
+      "Opportunity Tracker",
       "Analytics Dashboard",
       "Save 24% vs Weekly",
     ],
@@ -69,9 +73,11 @@ const PLANS = [
     colorAlpha: "rgba(245,200,66,0.1)",
     borderAlpha: "rgba(245,200,66,0.3)",
     features: [
-      "Unlimited AI Job Scans",
+      "Unlimited Profile Scans",
       "AI Cover Notes",
-      "Job Tracker",
+      "Interview Prep Coach",
+      "ATS Resume Scoring",
+      "Opportunity Tracker",
       "Analytics Dashboard",
       "Priority Support",
       "Save 61% vs Weekly",
@@ -134,7 +140,7 @@ export default function PricingModal({ isOpen, onClose, onSuccess, userEmail, us
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: data.amount,
         currency: "INR",
-        name: "MyAIJobHunt",
+        name: "SkillScan",
         description: data.plan_label,
         order_id: data.order_id,
         prefill: {
@@ -226,10 +232,10 @@ export default function PricingModal({ isOpen, onClose, onSuccess, userEmail, us
                   WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
                   marginBottom: "6px",
                 }}>
-                  Upgrade Your Hunt 🚀
+                  Unlock Advanced Analytics 🚀
                 </h2>
                 <p style={{ fontSize: "13px", color: "var(--sub)", lineHeight: 1.6 }}>
-                  You&apos;ve used all 5 free scans. Upgrade to unlock unlimited AI job matching.
+                  You&apos;ve used all 5 free uses. Upgrade to unlock unlimited AI scans, cover notes, interview prep & ATS scoring.
                 </p>
               </div>
               <motion.button

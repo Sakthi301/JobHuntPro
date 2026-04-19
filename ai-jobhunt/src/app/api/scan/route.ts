@@ -28,20 +28,22 @@ export async function POST(req: Request) {
       .eq('id', user.id)
       .single();
 
-    if (profileData) {
-      const isPaid = profileData.plan && profileData.plan !== 'free';
-      const isExpired = isPaid && profileData.plan_expiry && new Date(profileData.plan_expiry) < new Date();
+    if (!profileData) {
+      return NextResponse.json({ success: false, error: 'Profile not found' }, { status: 404 });
+    }
 
-      // Auto-downgrade expired paid plans back to free
-      if (isExpired) {
-        await supabase.from('profiles').update({ plan: 'free', plan_expiry: null }).eq('id', user.id);
-        profileData.plan = 'free';
-      }
+    const isPaid = profileData.plan && profileData.plan !== 'free';
+    const isExpired = isPaid && profileData.plan_expiry && new Date(profileData.plan_expiry) < new Date();
 
-      // Free users: max 5 scans
-      if ((!profileData.plan || profileData.plan === 'free') && (profileData.usage_count || 0) >= 5) {
-        return NextResponse.json({ success: false, error: 'limit_reached' }, { status: 403 });
-      }
+    // Auto-downgrade expired paid plans back to free
+    if (isExpired) {
+      await supabase.from('profiles').update({ plan: 'free', plan_expiry: null }).eq('id', user.id);
+      profileData.plan = 'free';
+    }
+
+    // Free users: max 5 uses (shared across all features)
+    if ((!profileData.plan || profileData.plan === 'free') && (profileData.usage_count || 0) >= 5) {
+      return NextResponse.json({ success: false, error: 'limit_reached' }, { status: 403 });
     }
 
     // --- Parse Request Body ---
@@ -102,15 +104,9 @@ Return ONLY valid JSON array. Schema:
     const jobs = JSON.parse(clean);
 
     // --- Step 3: Increment Usage Count ---
-    const { data: userData } = await supabase
-      .from('profiles')
-      .select('usage_count')
-      .eq('id', user.id)
-      .single();
-
     await supabase
       .from('profiles')
-      .update({ usage_count: (userData?.usage_count || 0) + 1 })
+      .update({ usage_count: (profileData.usage_count || 0) + 1 })
       .eq('id', user.id);
 
     // --- Return Scored Jobs ---

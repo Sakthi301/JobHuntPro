@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════
-// Dashboard Page — AI Job Hunt (Fully Responsive)
+// Dashboard Page — AI Profile Matcher (Fully Responsive)
 // ═══════════════════════════════════════════════════════════
 // Features:
 // - Responsive grid (2-col → 1-col on mobile)
@@ -83,7 +83,7 @@ export default function DashboardPage() {
     setScanning(true); 
     cachedJobs = [];
     setJobs([]);
-    toast.loading("🤖 AI is scanning jobs...", { id: "scan" });
+    toast.loading("🤖 AI is scanning opportunities...", { id: "scan" });
 
     try {
       const res = await fetch("/api/scan", {
@@ -95,10 +95,10 @@ export default function DashboardPage() {
       if (data.success) {
         cachedJobs = data.jobs.sort((a: JobScanned, b: JobScanned) => b.score - a.score);
         setJobs(cachedJobs);
-        toast.success(`Found ${data.jobs.length} matching jobs! ✅`, { id: "scan" });
+        toast.success(`Found ${data.jobs.length} matching opportunities! ✅`, { id: "scan" });
       } else if (data.error === "limit_reached") {
         // Free tier limit hit — show upgrade modal
-        toast.error("You've used all 5 free scans! Upgrade to continue. 🔒", { id: "scan" });
+        toast.error("You've used all 5 free uses! Upgrade to continue. 🔒", { id: "scan" });
         setShowPricing(true);
       } else {
         toast.error("Scan failed: " + data.error, { id: "scan" });
@@ -158,7 +158,7 @@ export default function DashboardPage() {
       {/* ─── Stats Row ─── */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "14px", marginBottom: "24px" }}>
         <motion.div className="stat-card" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-          <div className="stat-label">Jobs Scanned</div>
+          <div className="stat-label">Profiles Scanned</div>
           <div className="stat-value"><CountUp end={jobs.length} duration={1.5} /></div>
           <div className="stat-hint">Latest batch</div>
         </motion.div>
@@ -172,9 +172,9 @@ export default function DashboardPage() {
         </motion.div>
 
         <motion.div className="stat-card" style={{ borderTop: "2px solid var(--blue)" }} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-          <div className="stat-label">Total Scans</div>
+          <div className="stat-label">Total Uses</div>
           <div className="stat-value"><CountUp end={profile?.usage_count || 0} duration={1.5} /></div>
-          <div className="stat-hint">All time</div>
+          <div className="stat-hint">All features</div>
         </motion.div>
 
         <motion.div className="stat-card" style={{ borderTop: `2px solid ${profile?.plan && profile.plan !== 'free' ? 'var(--gold)' : 'var(--muted)'}` }} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
@@ -188,8 +188,8 @@ export default function DashboardPage() {
           </div>
           <div className="stat-hint">
             {profile?.plan === 'free'
-              ? `${Math.max(0, 5 - (profile?.usage_count || 0))} scans left`
-              : "Unlimited scans"}
+              ? `${Math.max(0, 5 - (profile?.usage_count || 0))} uses left`
+              : "Unlimited access"}
           </div>
         </motion.div>
       </div>
@@ -212,8 +212,8 @@ export default function DashboardPage() {
 
             <div style={{ marginTop: "12px", background: "var(--code-bg)", border: "1px solid var(--border)", borderRadius: "10px", padding: "12px", minHeight: "100px", fontSize: "10px", fontFamily: "monospace", color: "var(--sub)" }}>
               {scanning
-                ? "> 🤖 AI scanning & scoring..."
-                : `> Ready for ${profile?.target_roles?.[0] || "jobs"}...`}
+                ? "> 🤖 AI analyzing & scoring..."
+                : `> Ready for ${profile?.target_roles?.[0] || "opportunities"}...`}
             </div>
           </div>
         </motion.div>
@@ -222,7 +222,7 @@ export default function DashboardPage() {
         <motion.div className="glass-card" style={{ overflow: "hidden" }} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
           <div style={{ padding: "16px 22px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: "8px" }}>
             <Target size={13} />
-            <span className="section-label" style={{ color: "var(--teal)" }}>AI-Matched Jobs</span>
+            <span className="section-label" style={{ color: "var(--teal)" }}>AI-Matched Opportunities</span>
           </div>
           <div style={{ padding: "18px 20px", display: "flex", flexDirection: "column", gap: "14px" }}>
 
@@ -236,7 +236,7 @@ export default function DashboardPage() {
                     style={{ width: "100%", height: "150px" }}
                   />
                 </div>
-                <h4 style={{ fontSize: "20px", fontFamily: "var(--font-heading)", color: "var(--sub)", fontWeight: 700 }}>Ready to Hunt</h4>
+                <h4 style={{ fontSize: "20px", fontFamily: "var(--font-heading)", color: "var(--sub)", fontWeight: 700 }}>Ready to Match</h4>
                 <p style={{ color: "var(--muted)", fontSize: "13px" }}>Click "Scan & Match" to find opportunities</p>
               </div>
             )}

@@ -1,11 +1,12 @@
 // ═══════════════════════════════════════════════════════════
-// Interview Prep Page — PRO ONLY
+// Interview Prep Page — Freemium (5 free uses)
 // ═══════════════════════════════════════════════════════════
 // Features:
 // - Enter company + role → AI generates 10 interview Q&A
 // - Collapsible accordion cards with staggered animations
 // - Category badges (Technical, Behavioral, etc.)
-// - Pro-gated with PricingModal fallback
+// - Free users get 5 uses, then upgrade prompt
+// - Pro badge shown only for paid users
 // ═══════════════════════════════════════════════════════════
 
 "use client";
@@ -55,6 +56,9 @@ export default function InterviewPrepPage() {
     load();
   }, []);
 
+  const isPro = profile?.plan && profile.plan !== "free";
+  const usesLeft = Math.max(0, 5 - (profile?.usage_count || 0));
+
   const handleGenerate = async () => {
     if (!company.trim() || !role.trim()) {
       toast.error("Please enter both company and role! 🛑");
@@ -75,9 +79,15 @@ export default function InterviewPrepPage() {
 
       if (data.success) {
         setQuestions(data.questions);
+        // Refresh profile to update usage count
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: updated } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+          setProfile(updated);
+        }
         toast.success(`Generated ${data.questions.length} interview questions! ✅`, { id: "interview" });
-      } else if (data.error === "pro_required") {
-        toast.error("This feature is for Pro users only! 👑", { id: "interview" });
+      } else if (data.error === "limit_reached") {
+        toast.error("You've used all 5 free uses! Upgrade to continue. 🔒", { id: "interview" });
         setShowPricing(true);
       } else {
         toast.error("Failed: " + data.error, { id: "interview" });
@@ -99,35 +109,58 @@ export default function InterviewPrepPage() {
   };
 
   return (
-    <div className="pro-page" style={{ maxWidth: "800px", margin: "0 auto", position: "relative" }}>
+    <div className={isPro ? "pro-page" : ""} style={{ maxWidth: "800px", margin: "0 auto", position: "relative" }}>
 
-      {/* Pro Aurora Background */}
-      <div className="pro-aurora">
-        <div className="pro-aurora-blob pro-blob-1" />
-        <div className="pro-aurora-blob pro-blob-2" />
-        <div className="pro-aurora-blob pro-blob-3" />
-      </div>
+      {/* Pro Aurora Background (only for pro users) */}
+      {isPro && (
+        <div className="pro-aurora">
+          <div className="pro-aurora-blob pro-blob-1" />
+          <div className="pro-aurora-blob pro-blob-2" />
+          <div className="pro-aurora-blob pro-blob-3" />
+        </div>
+      )}
 
       {/* Header */}
       <div style={{ textAlign: "center", marginBottom: "32px" }}>
-        <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
-          <motion.div
-            className="pro-badge-glow"
-            style={{
+        {/* Pro badge only for paid users */}
+        {isPro && (
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
+            <motion.div
+              className="pro-badge-glow"
+              style={{
+                display: "flex", alignItems: "center", gap: "6px",
+                padding: "5px 14px", borderRadius: "20px",
+                background: "linear-gradient(135deg, rgba(212,168,67,0.12), rgba(245,215,110,0.06))",
+                border: "1px solid rgba(212,168,67,0.25)",
+                fontSize: "11px", fontWeight: 700, fontFamily: "var(--font-heading)",
+                color: "var(--pro-gold2)", textTransform: "uppercase", letterSpacing: "1.5px",
+              }}
+            >
+              <Crown size={14} /> Pro — Unlimited
+            </motion.div>
+          </div>
+        )}
+
+        {/* Free tier uses-left badge */}
+        {!isPro && profile && (
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
+            <div style={{
               display: "flex", alignItems: "center", gap: "6px",
               padding: "5px 14px", borderRadius: "20px",
-              background: "linear-gradient(135deg, rgba(212,168,67,0.12), rgba(245,215,110,0.06))",
-              border: "1px solid rgba(212,168,67,0.25)",
+              background: usesLeft > 0 ? "rgba(0,217,170,0.08)" : "rgba(239,68,68,0.08)",
+              border: `1px solid ${usesLeft > 0 ? "rgba(0,217,170,0.3)" : "rgba(239,68,68,0.3)"}`,
               fontSize: "11px", fontWeight: 700, fontFamily: "var(--font-heading)",
-              color: "var(--pro-gold2)", textTransform: "uppercase", letterSpacing: "1.5px",
-            }}
-          >
-            <Crown size={14} /> Pro Feature
-          </motion.div>
-        </div>
+              color: usesLeft > 0 ? "var(--teal)" : "var(--red)",
+              textTransform: "uppercase", letterSpacing: "1.5px",
+            }}>
+              {usesLeft > 0 ? `${usesLeft} free uses left` : "Free uses exhausted"}
+            </div>
+          </div>
+        )}
+
         <h2 className="page-title">
           AI Interview<br />
-          <em className="pro-title-gradient" style={{ fontStyle: "normal" }}>Prep Coach</em>
+          <em className={isPro ? "pro-title-gradient" : ""} style={{ fontStyle: "normal", ...(!isPro ? { background: "linear-gradient(135deg, var(--ember), var(--blue))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" } : {}) }}>Prep Coach</em>
         </h2>
         <p className="page-subtitle" style={{ maxWidth: "500px", margin: "8px auto 0" }}>
           Enter the company and role — AI generates 10 tailored interview questions with ideal answers.

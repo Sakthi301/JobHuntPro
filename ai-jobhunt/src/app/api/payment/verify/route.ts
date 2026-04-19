@@ -48,6 +48,7 @@ export async function POST(req: Request) {
     const { error } = await supabase.from('profiles').update({
       plan: plan,
       plan_expiry: expiry.toISOString(),
+      usage_count: 0,
       updated_at: new Date().toISOString(),
     }).eq('id', user.id);
 

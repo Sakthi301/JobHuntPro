@@ -40,7 +40,7 @@ export default function LoginPage() {
         if (error) throw error;
 
         if (data.session) {
-          toast.success("Welcome to JobHunt Pro! 🚀");
+          toast.success("Welcome to SkillScan Pro! 🚀");
           router.push("/");
           router.refresh();
         } else {
@@ -74,13 +74,13 @@ export default function LoginPage() {
         <div className={styles.authBrand}>
           <motion.img
             src="/logo.svg"
-            alt="MyAIJobHunt Logo"
+            alt="SkillScan Logo"
             whileHover={{ rotate: 15, scale: 1.1 }}
             transition={{ type: "spring", stiffness: 300 }}
             style={{ width: "64px", height: "64px", margin: "0 auto" }}
           />
-          <h1>MyAIJobHunt</h1>
-          <p>AI-Powered Career Command Center</p>
+          <h1>SkillScan</h1>
+          <p>AI-Powered Resume & Skills Analytics</p>
         </div>
 
         {/* Tabs */}

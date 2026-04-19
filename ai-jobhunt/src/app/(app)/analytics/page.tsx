@@ -65,7 +65,7 @@ export default function AnalyticsPage() {
 
       {/* Page Header */}
       <h2 className="page-title">📊 Analytics</h2>
-      <p className="page-subtitle" style={{ marginBottom: "28px" }}>Your job hunt performance at a glance</p>
+      <p className="page-subtitle" style={{ marginBottom: "28px" }}>Your opportunity performance at a glance</p>
 
       {/* ─── Stats Grid ─── */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "14px", marginBottom: "28px" }}>

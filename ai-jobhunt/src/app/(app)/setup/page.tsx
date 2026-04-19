@@ -125,7 +125,7 @@ export default function SetupPage() {
   const saveProfile = async () => {
     // Validation
     if (!profile.name.trim() || !profile.exp.trim() || !profile.role.trim() || !profile.industry || !profile.skills.trim() || !profile.achieve.trim() || !profile.minSal.trim()) {
-      toast.error("Please fill out all text fields before starting your hunt! 🛑");
+      toast.error("Please fill out all text fields before starting your analysis! 🛑");
       return;
     }
     if (roles.length === 0 || locs.length === 0) {
@@ -172,7 +172,7 @@ export default function SetupPage() {
       {/* ─── Page Header ─── */}
       <div style={{ textAlign: "center", marginBottom: "40px" }}>
         <h2 className="page-title">
-          Your AI Job Hunt<br />
+          Your AI Profile Analytics<br />
           <em style={{
             fontStyle: "normal",
             background: "linear-gradient(135deg, var(--ember), var(--gold))",
@@ -348,7 +348,7 @@ export default function SetupPage() {
         className="btn-primary"
         style={{ width: "100%", padding: "15px", fontSize: "15px" }}
       >
-        {saving ? "Saving securely..." : "⚡ Save Everything & Start Hunting"}
+        {saving ? "Saving securely..." : "⚡ Save Everything & Start Matching"}
       </motion.button>
     </div>
   );

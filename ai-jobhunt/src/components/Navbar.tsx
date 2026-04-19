@@ -2,9 +2,9 @@
 // Navbar — Desktop Navigation with Premium Pro Theme
 // ═══════════════════════════════════════════════════════════
 // Features:
-// - Dynamic brand: "MyAIJobHunt" (free) → "MyAIJobHuntPro" (pro)
+// - Dynamic brand: "SkillScan" (free) → "SkillScan PRO" (pro)
 // - Gold-tinted premium chrome for Pro users
-// - Animated Pro badge with golden glow ring
+// - All tabs visible for all users (freemium model)
 // - Gold avatar ring for Pro users
 // - Tab navigation with active indicator
 // - Dark/Light mode toggle
@@ -23,14 +23,10 @@ import { motion } from "motion/react";
 // Navigation items
 const NAV_ITEMS = [
   { name: "Setup",     path: "/setup",     icon: Settings },
-  { name: "Hunt",      path: "/",          icon: Search },
+  { name: "Match",     path: "/",          icon: Search },
   { name: "Analytics", path: "/analytics", icon: BarChart2 },
   { name: "Tracker",   path: "/tracker",   icon: CheckSquare },
   { name: "Cover",     path: "/cover",     icon: FileText },
-];
-
-// Pro-only navigation items (hidden for free users)
-const PRO_NAV_ITEMS = [
   { name: "Interview", path: "/interview", icon: MessageSquare },
   { name: "ATS Score", path: "/ats",       icon: FileSearch },
 ];
@@ -100,7 +96,7 @@ export default function Navbar() {
         <div style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer" }}>
           <motion.img
             src="/logo.svg"
-            alt="MyAIJobHunt Logo"
+            alt="SkillScan Logo"
             whileHover={{ rotate: 10, scale: 1.1 }}
             style={{
               width: "36px", height: "36px", flexShrink: 0,
@@ -117,7 +113,7 @@ export default function Navbar() {
                   WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
                 } : {})
               }}
-            >MyAIJobHunt</div>
+            >SkillScan</div>
             {isPro && (
               <motion.span
                 initial={{ opacity: 0, scale: 0.5 }}
@@ -166,31 +162,6 @@ export default function Navbar() {
           );
         })}
 
-        {/* Pro-only tabs — hidden for free users */}
-        {isPro && PRO_NAV_ITEMS.map((item) => {
-          const isActive = pathname === item.path;
-          const Icon = item.icon;
-          return (
-            <Link key={item.path} href={item.path}>
-              <motion.div
-                whileHover={{ scale: 1.04 }}
-                whileTap={{ scale: 0.97 }}
-                style={{
-                  display: "flex", alignItems: "center", gap: "7px",
-                  padding: "8px 14px", borderRadius: "9px",
-                  fontSize: "13px", fontWeight: 500,
-                  color: isActive ? "var(--pro-gold2)" : "var(--sub)",
-                  background: isActive ? "rgba(212,168,67,0.1)" : "transparent",
-                  border: isActive ? "1px solid rgba(212,168,67,0.25)" : "1px solid transparent",
-                  transition: "all .2s"
-                }}
-              >
-                <Icon size={15} /> {item.name}
-                <Sparkles size={10} style={{ color: "var(--pro-gold2)" }} />
-              </motion.div>
-            </Link>
-          );
-        })}
       </div>
 
       {/* ─── Right Section: Plan Badge + Theme Toggle + User ─── */}

@@ -1,11 +1,12 @@
 // ═══════════════════════════════════════════════════════════
-// Cover Notes Page — AI Generator (Responsive)
+// Cover Notes Page — AI Generator (Freemium)
 // ═══════════════════════════════════════════════════════════
 // Features:
 // - Responsive grid (2-col → 1-col on mobile)
 // - Sonner toasts for feedback
 // - Motion animations on cards and buttons
 // - AutoAnimate on saved notes list
+// - Free users: 5 total uses (shared), then upgrade prompt
 // ═══════════════════════════════════════════════════════════
 
 "use client";
@@ -16,6 +17,7 @@ import { CoverNote, Profile } from "@/types";
 import { motion, AnimatePresence } from "motion/react";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { toast } from "sonner";
+import PricingModal from "@/components/PricingModal";
 
 export default function CoverPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -26,6 +28,7 @@ export default function CoverPage() {
   const [output, setOutput] = useState("");
   const [outputTitle, setOutputTitle] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPricing, setShowPricing] = useState(false);
   const [notesRef] = useAutoAnimate();
 
   const supabase = createClient();
@@ -64,7 +67,16 @@ export default function CoverPage() {
       if (data.success) {
         setOutput(data.note);
         setOutputTitle(type === "cold_email" ? `Cold Email → ${coldCo}` : "Custom Cover Note");
+        // Refresh profile to update usage count
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: updated } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+          setProfile(updated);
+        }
         toast.success("Generated! ✅", { id: "cover" });
+      } else if (data.error === "limit_reached") {
+        toast.error("You've used all 5 free uses! Upgrade to continue. 🔒", { id: "cover" });
+        setShowPricing(true);
       } else {
         toast.error("Error: " + data.error, { id: "cover" });
       }
@@ -90,14 +102,57 @@ export default function CoverPage() {
     }
   };
 
+  const isPro = profile?.plan && profile.plan !== "free";
+  const usesLeft = Math.max(0, 5 - (profile?.usage_count || 0));
+
+  const refreshProfile = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+      setProfile(data);
+    }
+    setShowPricing(false);
+  };
+
   return (
     <div style={{ maxWidth: "900px", margin: "0 auto" }}>
 
       {/* Header */}
       <h2 className="page-title">✍️ Cover Notes</h2>
-      <p className="page-subtitle" style={{ marginBottom: "28px" }}>
+      <p className="page-subtitle" style={{ marginBottom: "8px" }}>
         AI-generated cover notes and cold emails tailored to your profile
       </p>
+
+      {/* Free tier uses-left badge */}
+      {!isPro && profile && (
+        <div style={{ marginBottom: "24px" }}>
+          <span style={{
+            display: "inline-flex", alignItems: "center", gap: "6px",
+            padding: "5px 14px", borderRadius: "20px",
+            background: usesLeft > 0 ? "rgba(0,217,170,0.08)" : "rgba(239,68,68,0.08)",
+            border: `1px solid ${usesLeft > 0 ? "rgba(0,217,170,0.3)" : "rgba(239,68,68,0.3)"}`,
+            fontSize: "11px", fontWeight: 700, fontFamily: "var(--font-heading)",
+            color: usesLeft > 0 ? "var(--teal)" : "var(--red)",
+            textTransform: "uppercase", letterSpacing: "1.5px",
+          }}>
+            {usesLeft > 0 ? `${usesLeft} free uses left` : "Free uses exhausted — Upgrade to continue"}
+          </span>
+        </div>
+      )}
+      {isPro && (
+        <div style={{ marginBottom: "24px" }}>
+          <span style={{
+            display: "inline-flex", alignItems: "center", gap: "6px",
+            padding: "5px 14px", borderRadius: "20px",
+            background: "linear-gradient(135deg, rgba(212,168,67,0.12), rgba(245,215,110,0.06))",
+            border: "1px solid rgba(212,168,67,0.25)",
+            fontSize: "11px", fontWeight: 700, fontFamily: "var(--font-heading)",
+            color: "var(--pro-gold2)", textTransform: "uppercase", letterSpacing: "1.5px",
+          }}>
+            👑 Pro — Unlimited
+          </span>
+        </div>
+      )}
 
       {/* ─── Generator Cards ─── */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "18px", marginBottom: "24px" }}>
@@ -195,6 +250,15 @@ export default function CoverPage() {
           </div>
         </>
       )}
+
+      {/* Pricing Modal */}
+      <PricingModal
+        isOpen={showPricing}
+        onClose={() => setShowPricing(false)}
+        onSuccess={refreshProfile}
+        userEmail={profile?.email || ""}
+        userName={profile?.name || ""}
+      />
     </div>
   );
 }
