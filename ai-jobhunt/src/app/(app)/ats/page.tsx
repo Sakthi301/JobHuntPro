@@ -16,7 +16,6 @@ import { useState, useEffect, useRef } from "react";
 import { motion } from "motion/react";
 import { toast } from "sonner";
 import { FileSearch, Loader2, Crown, Check, X, ArrowUpCircle, Upload } from "lucide-react";
-import PricingModal from "@/components/PricingModal";
 import { createClient } from "@/lib/supabase/client";
 
 type ATSResult = {
@@ -34,7 +33,6 @@ export default function ATSScorePage() {
   const [jobDescription, setJobDescription] = useState("");
   const [result, setResult] = useState<ATSResult | null>(null);
   const [loading, setLoading] = useState(false);
-  const [showPricing, setShowPricing] = useState(false);
   const [profile, setProfile] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -90,7 +88,7 @@ export default function ATSScorePage() {
         toast.success("ATS Analysis complete! ✅", { id: "ats" });
       } else if (data.error === "limit_reached") {
         toast.error("You've used all 5 free uses! Upgrade to continue. 🔒", { id: "ats" });
-        setShowPricing(true);
+        window.dispatchEvent(new CustomEvent("show-pricing"));
       } else {
         toast.error("Failed: " + data.error, { id: "ats" });
       }
@@ -99,15 +97,6 @@ export default function ATSScorePage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const refreshProfile = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const { data } = await supabase.from("profiles").select("*").eq("id", user.id).single();
-      setProfile(data);
-    }
-    setShowPricing(false);
   };
 
   const getScoreColor = (score: number) =>
@@ -375,14 +364,6 @@ export default function ATSScorePage() {
         }
       `}} />
 
-      {/* Pricing Modal */}
-      <PricingModal
-        isOpen={showPricing}
-        onClose={() => setShowPricing(false)}
-        onSuccess={refreshProfile}
-        userEmail={profile?.email || ""}
-        userName={profile?.name || ""}
-      />
     </div>
   );
 }

@@ -17,7 +17,6 @@ import { CoverNote, Profile } from "@/types";
 import { motion, AnimatePresence } from "motion/react";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { toast } from "sonner";
-import PricingModal from "@/components/PricingModal";
 
 export default function CoverPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -28,7 +27,6 @@ export default function CoverPage() {
   const [output, setOutput] = useState("");
   const [outputTitle, setOutputTitle] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showPricing, setShowPricing] = useState(false);
   const [notesRef] = useAutoAnimate();
 
   const supabase = createClient();
@@ -76,7 +74,7 @@ export default function CoverPage() {
         toast.success("Generated! ✅", { id: "cover" });
       } else if (data.error === "limit_reached") {
         toast.error("You've used all 5 free uses! Upgrade to continue. 🔒", { id: "cover" });
-        setShowPricing(true);
+        window.dispatchEvent(new CustomEvent("show-pricing"));
       } else {
         toast.error("Error: " + data.error, { id: "cover" });
       }
@@ -104,15 +102,6 @@ export default function CoverPage() {
 
   const isPro = profile?.plan && profile.plan !== "free";
   const usesLeft = Math.max(0, 5 - (profile?.usage_count || 0));
-
-  const refreshProfile = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const { data } = await supabase.from("profiles").select("*").eq("id", user.id).single();
-      setProfile(data);
-    }
-    setShowPricing(false);
-  };
 
   return (
     <div style={{ maxWidth: "900px", margin: "0 auto" }}>
@@ -251,14 +240,6 @@ export default function CoverPage() {
         </>
       )}
 
-      {/* Pricing Modal */}
-      <PricingModal
-        isOpen={showPricing}
-        onClose={() => setShowPricing(false)}
-        onSuccess={refreshProfile}
-        userEmail={profile?.email || ""}
-        userName={profile?.name || ""}
-      />
     </div>
   );
 }

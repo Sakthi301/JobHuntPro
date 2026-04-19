@@ -19,6 +19,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import { useTheme } from "@/components/ThemeProvider";
 import { motion } from "motion/react";
+import PricingModal from "@/components/PricingModal";
 
 // Navigation items
 const NAV_ITEMS = [
@@ -38,6 +39,8 @@ export default function Navbar() {
   const [userName, setUserName] = useState("");
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [showPricing, setShowPricing] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
   // Load cached plan instantly to prevent free→pro flash on refresh
   const [userPlan, setUserPlan] = useState(() => {
     if (typeof window !== "undefined") {
@@ -60,6 +63,9 @@ export default function Navbar() {
       } else {
         setUserName(user?.email?.split("@")[0] || "User");
       }
+      if (user?.email) {
+        setUserEmail(user.email);
+      }
       // Fetch plan and cache it
       if (user) {
         const { data: profile } = await supabase.from("profiles").select("plan").eq("id", user.id).single();
@@ -72,6 +78,12 @@ export default function Navbar() {
     getUser();
   }, []);
 
+  useEffect(() => {
+    const handler = () => setShowPricing(true);
+    window.addEventListener("show-pricing", handler);
+    return () => window.removeEventListener("show-pricing", handler);
+  }, []);
+
   // Sign out — clear cached plan
   const handleLogout = async () => {
     localStorage.removeItem("userPlan");
@@ -81,11 +93,11 @@ export default function Navbar() {
 
   return (
     <nav
-      className={isPro ? "navbar-pro" : ""}
+      className={isPro ? "navbar-pro navbar-main" : "navbar-main"}
       style={{
         position: "sticky", top: 0, zIndex: 100,
         display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "0 28px", height: "62px",
+        height: "62px",
         background: "var(--navbar-bg)", backdropFilter: "blur(24px)",
         borderBottom: "1px solid var(--border)",
         transition: "background 0.3s, border-color 0.3s"
@@ -267,11 +279,24 @@ export default function Navbar() {
 
       {/* Responsive: hide desktop tabs + user name on mobile */}
       <style dangerouslySetInnerHTML={{ __html: `
+        .navbar-main { padding: 0 28px; }
         @media (max-width: 768px) {
+          .navbar-main { padding: 0 16px; }
           .nav-tabs { display: none !important; }
           .user-name { display: none !important; }
         }
       `}} />
+
+      <PricingModal
+        isOpen={showPricing}
+        onClose={() => setShowPricing(false)}
+        onSuccess={() => {
+          setShowPricing(false);
+          window.location.reload();
+        }}
+        userEmail={userEmail}
+        userName={userName}
+      />
     </nav>
   );
 }

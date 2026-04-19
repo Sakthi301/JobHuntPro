@@ -61,7 +61,7 @@ export default function MobileNav() {
       padding: "6px 0 env(safe-area-inset-bottom, 12px)",
       zIndex: 100, transition: "background 0.3s"
     }}>
-      <div style={{ display: "flex", justifyContent: "space-around" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", padding: "0 4px" }}>
         {NAV_ITEMS.map((item) => {
           const isActive = pathname === item.path;
           const Icon = item.icon;
@@ -70,21 +70,23 @@ export default function MobileNav() {
           const dotColor = isPro ? "var(--pro-gold1)" : "var(--ember)";
 
           return (
-            <Link key={item.path} href={item.path}>
+            <Link key={item.path} href={item.path} style={{ flex: 1, display: "flex", justifyContent: "center" }}>
               <motion.div
                 whileTap={{ scale: 0.85 }}
                 style={{
                   display: "flex", flexDirection: "column", alignItems: "center", gap: "3px",
-                  fontSize: "9px", padding: "6px 12px",
+                  fontSize: "9px", padding: "6px 0",
                   color: isActive ? activeColor : "var(--muted)",
                   transition: "color .2s",
                   position: "relative",
+                  width: "100%",
+                  textAlign: "center"
                 }}
               >
                 <div style={{ position: "relative" }}>
                   <Icon size={20} />
                 </div>
-                <span style={{ textTransform: "uppercase", letterSpacing: "0.5px" }}>{item.name}</span>
+                <span style={{ textTransform: "uppercase", letterSpacing: "0.5px", whiteSpace: "nowrap", transform: "scale(0.9)" }}>{item.name}</span>
                 {/* Active dot indicator */}
                 {isActive && (
                   <motion.div

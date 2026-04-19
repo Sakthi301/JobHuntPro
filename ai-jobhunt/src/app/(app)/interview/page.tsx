@@ -15,7 +15,6 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { toast } from "sonner";
 import { MessageSquare, Loader2, ChevronDown, ChevronUp, Lightbulb, Crown } from "lucide-react";
-import PricingModal from "@/components/PricingModal";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect } from "react";
 
@@ -40,7 +39,6 @@ export default function InterviewPrepPage() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState<number | null>(null);
-  const [showPricing, setShowPricing] = useState(false);
   const [profile, setProfile] = useState<any>(null);
 
   const supabase = createClient();
@@ -88,7 +86,7 @@ export default function InterviewPrepPage() {
         toast.success(`Generated ${data.questions.length} interview questions! ✅`, { id: "interview" });
       } else if (data.error === "limit_reached") {
         toast.error("You've used all 5 free uses! Upgrade to continue. 🔒", { id: "interview" });
-        setShowPricing(true);
+        window.dispatchEvent(new CustomEvent("show-pricing"));
       } else {
         toast.error("Failed: " + data.error, { id: "interview" });
       }
@@ -97,15 +95,6 @@ export default function InterviewPrepPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const refreshProfile = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const { data } = await supabase.from("profiles").select("*").eq("id", user.id).single();
-      setProfile(data);
-    }
-    setShowPricing(false);
   };
 
   return (
@@ -291,14 +280,6 @@ export default function InterviewPrepPage() {
         })}
       </AnimatePresence>
 
-      {/* Pricing Modal */}
-      <PricingModal
-        isOpen={showPricing}
-        onClose={() => setShowPricing(false)}
-        onSuccess={refreshProfile}
-        userEmail={profile?.email || ""}
-        userName={profile?.name || ""}
-      />
     </div>
   );
 }

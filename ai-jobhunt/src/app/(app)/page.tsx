@@ -19,7 +19,6 @@ import { motion, AnimatePresence } from "motion/react";
 import { toast } from "sonner";
 import CountUp from "react-countup";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
-import PricingModal from "@/components/PricingModal";
 
 // Module-level cache to keep jobs alive when navigating between tabs
 let cachedJobs: JobScanned[] = [];
@@ -30,7 +29,6 @@ export default function DashboardPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [scanning, setScanning] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(true);
-  const [showPricing, setShowPricing] = useState(false);
 
   const supabase = createClient();
 
@@ -54,13 +52,6 @@ export default function DashboardPage() {
     }
     loadData();
   }, [supabase.auth]);
-
-  // Listen for Navbar "Upgrade" button click
-  useEffect(() => {
-    const handler = () => setShowPricing(true);
-    window.addEventListener("show-pricing", handler);
-    return () => window.removeEventListener("show-pricing", handler);
-  }, []);
 
   // --- AI Job Scan ---
   const handleScan = async () => {
@@ -99,7 +90,7 @@ export default function DashboardPage() {
       } else if (data.error === "limit_reached") {
         // Free tier limit hit — show upgrade modal
         toast.error("You've used all 5 free uses! Upgrade to continue. 🔒", { id: "scan" });
-        setShowPricing(true);
+        window.dispatchEvent(new CustomEvent("show-pricing"));
       } else {
         toast.error("Scan failed: " + data.error, { id: "scan" });
       }
@@ -108,16 +99,6 @@ export default function DashboardPage() {
     } finally {
       setScanning(false);
     }
-  };
-
-  // --- Refresh profile after successful payment ---
-  const refreshProfile = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const { data } = await supabase.from("profiles").select("*").eq("id", user.id).single();
-      setProfile(data);
-    }
-    setShowPricing(false);
   };
 
   // --- Mark job as applied ---
@@ -306,14 +287,6 @@ export default function DashboardPage() {
         }
       `}} />
 
-      {/* ─── Pricing Modal ─── */}
-      <PricingModal
-        isOpen={showPricing}
-        onClose={() => setShowPricing(false)}
-        onSuccess={refreshProfile}
-        userEmail={profile?.email || ""}
-        userName={profile?.name || ""}
-      />
     </div>
   );
 }
