@@ -9,9 +9,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Settings, Search, BarChart2, CheckSquare, FileText, MessageSquare, FileSearch, Sparkles } from "lucide-react";
+import { Settings, Search, BarChart2, CheckSquare, FileText, MessageSquare, FileSearch, FilePenLine, BookOpenCheck } from "lucide-react";
 import { motion } from "motion/react";
-import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 
 const NAV_ITEMS = [
@@ -20,6 +19,8 @@ const NAV_ITEMS = [
   { name: "Analytics", path: "/analytics", icon: BarChart2 },
   { name: "Tracker",   path: "/tracker",   icon: CheckSquare },
   { name: "Cover",     path: "/cover",     icon: FileText },
+  { name: "Resume",    path: "/resume-builder", icon: FilePenLine },
+  { name: "QBank",     path: "/question-bank", icon: BookOpenCheck },
   { name: "Interview", path: "/interview", icon: MessageSquare },
   { name: "ATS",       path: "/ats",       icon: FileSearch },
 ];
@@ -33,22 +34,18 @@ export default function MobileNav() {
     }
     return "free";
   });
-  const supabase = createClient();
-
   const isPro = userPlan !== "free";
 
   useEffect(() => {
-    async function loadPlan() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data } = await supabase.from("profiles").select("plan").eq("id", user.id).single();
-        if (data?.plan) {
-          setUserPlan(data.plan);
-          localStorage.setItem("userPlan", data.plan);
-        }
-      }
-    }
-    loadPlan();
+    const syncPlan = () => {
+      setUserPlan(localStorage.getItem("userPlan") || "free");
+    };
+    window.addEventListener("storage", syncPlan);
+    window.addEventListener("user-plan-updated", syncPlan);
+    return () => {
+      window.removeEventListener("storage", syncPlan);
+      window.removeEventListener("user-plan-updated", syncPlan);
+    };
   }, []);
 
 

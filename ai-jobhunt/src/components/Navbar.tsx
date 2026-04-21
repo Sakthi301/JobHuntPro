@@ -14,7 +14,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Settings, Search, BarChart2, CheckSquare, FileText, LogOut, Sun, Moon, Crown, MessageSquare, FileSearch, Sparkles } from "lucide-react";
+import { Settings, Search, BarChart2, CheckSquare, FileText, LogOut, Sun, Moon, Crown, MessageSquare, FileSearch, FilePenLine, BookOpenCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import { useTheme } from "@/components/ThemeProvider";
@@ -28,14 +28,25 @@ const NAV_ITEMS = [
   { name: "Analytics", path: "/analytics", icon: BarChart2 },
   { name: "Tracker",   path: "/tracker",   icon: CheckSquare },
   { name: "Cover",     path: "/cover",     icon: FileText },
+  { name: "Resume",    path: "/resume-builder", icon: FilePenLine },
+  { name: "Q Bank",    path: "/question-bank", icon: BookOpenCheck },
   { name: "Interview", path: "/interview", icon: MessageSquare },
   { name: "ATS Score", path: "/ats",       icon: FileSearch },
 ];
 
+async function withTimeout<T>(promise: Promise<T>, timeoutMs = 2000): Promise<T> {
+  return await Promise.race([
+    promise,
+    new Promise<T>((_, reject) => {
+      setTimeout(() => reject(new Error("Request timeout")), timeoutMs);
+    }),
+  ]);
+}
+
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
-  const supabase = createClient();
+  const [supabase] = useState(() => createClient());
   const [userName, setUserName] = useState("");
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -57,26 +68,36 @@ export default function Navbar() {
   // Fetch user name on mount
   useEffect(() => {
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user?.user_metadata?.full_name) {
-        setUserName(user.user_metadata.full_name);
-      } else {
-        setUserName(user?.email?.split("@")[0] || "User");
-      }
-      if (user?.email) {
-        setUserEmail(user.email);
-      }
-      // Fetch plan and cache it
-      if (user) {
-        const { data: profile } = await supabase.from("profiles").select("plan").eq("id", user.id).single();
-        if (profile?.plan) {
-          setUserPlan(profile.plan);
-          localStorage.setItem("userPlan", profile.plan);
+      try {
+        const userResult = await withTimeout(supabase.auth.getUser(), 2000);
+        const user = userResult.data.user;
+        if (user?.user_metadata?.full_name) {
+          setUserName(user.user_metadata.full_name);
+        } else {
+          setUserName(user?.email?.split("@")[0] || "User");
         }
+        if (user?.email) {
+          setUserEmail(user.email);
+        }
+        // Fetch plan and cache it
+        if (user) {
+          const profileResult = await withTimeout(
+            supabase.from("profiles").select("plan").eq("id", user.id).single(),
+            2000
+          );
+          const profile = profileResult.data;
+          if (profile?.plan) {
+            setUserPlan(profile.plan);
+            localStorage.setItem("userPlan", profile.plan);
+            window.dispatchEvent(new Event("user-plan-updated"));
+          }
+        }
+      } catch {
+        setUserName("User");
       }
     };
     getUser();
-  }, []);
+  }, [supabase]);
 
   useEffect(() => {
     const handler = () => setShowPricing(true);
@@ -87,6 +108,7 @@ export default function Navbar() {
   // Sign out — clear cached plan
   const handleLogout = async () => {
     localStorage.removeItem("userPlan");
+    window.dispatchEvent(new Event("user-plan-updated"));
     await supabase.auth.signOut();
     router.push("/login");
   };

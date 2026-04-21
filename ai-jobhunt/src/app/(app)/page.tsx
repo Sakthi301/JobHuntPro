@@ -17,12 +17,19 @@ import { JobScanned, Profile } from "@/types";
 import { Search, Loader2, Target, Filter, Crown } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { toast } from "sonner";
-import CountUp from "react-countup";
-import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 
 // Module-level cache to keep jobs alive when navigating between tabs
 let cachedJobs: JobScanned[] = [];
 let cachedUserId: string | null = null;
+
+async function withTimeout<T>(promise: Promise<T>, timeoutMs = 2000): Promise<T> {
+  return await Promise.race([
+    promise,
+    new Promise<T>((_, reject) => {
+      setTimeout(() => reject(new Error("Request timeout")), timeoutMs);
+    }),
+  ]);
+}
 
 export default function DashboardPage() {
   const [jobs, setJobs] = useState<JobScanned[]>(cachedJobs);
@@ -30,28 +37,41 @@ export default function DashboardPage() {
   const [scanning, setScanning] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(true);
 
-  const supabase = createClient();
+  const [supabase] = useState(() => createClient());
 
   useEffect(() => {
     async function loadData() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        if (cachedUserId !== user.id) {
+      try {
+        const userResult = await withTimeout(supabase.auth.getUser(), 2000);
+        const user = userResult.data.user;
+
+        if (user) {
+          if (cachedUserId !== user.id) {
+            cachedJobs = [];
+            cachedUserId = user.id;
+            setJobs([]);
+          }
+          const profileResult = await withTimeout(
+            supabase.from("profiles").select("*").eq("id", user.id).single(),
+            2000
+          );
+          setProfile(profileResult.data);
+        } else {
           cachedJobs = [];
-          cachedUserId = user.id;
+          cachedUserId = null;
           setJobs([]);
         }
-        const { data } = await supabase.from("profiles").select("*").eq("id", user.id).single();
-        setProfile(data);
-      } else {
+      } catch {
         cachedJobs = [];
         cachedUserId = null;
         setJobs([]);
+        setProfile(null);
+      } finally {
+        setLoadingProfile(false);
       }
-      setLoadingProfile(false);
     }
     loadData();
-  }, [supabase.auth]);
+  }, [supabase]);
 
   // --- AI Job Scan ---
   const handleScan = async () => {
@@ -140,7 +160,7 @@ export default function DashboardPage() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "14px", marginBottom: "24px" }}>
         <motion.div className="stat-card" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
           <div className="stat-label">Profiles Scanned</div>
-          <div className="stat-value"><CountUp end={jobs.length} duration={1.5} /></div>
+          <div className="stat-value">{jobs.length}</div>
           <div className="stat-hint">Latest batch</div>
         </motion.div>
 
@@ -154,7 +174,7 @@ export default function DashboardPage() {
 
         <motion.div className="stat-card" style={{ borderTop: "2px solid var(--blue)" }} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
           <div className="stat-label">Total Uses</div>
-          <div className="stat-value"><CountUp end={profile?.usage_count || 0} duration={1.5} /></div>
+          <div className="stat-value">{profile?.usage_count || 0}</div>
           <div className="stat-hint">All features</div>
         </motion.div>
 
@@ -207,15 +227,19 @@ export default function DashboardPage() {
           </div>
           <div style={{ padding: "18px 20px", display: "flex", flexDirection: "column", gap: "14px" }}>
 
-            {/* Empty State with Lottie */}
+            {/* Empty State */}
             {jobs.length === 0 && !scanning && (
               <div style={{ textAlign: "center", padding: "40px 20px" }}>
-                <div style={{ maxWidth: "200px", margin: "0 auto 16px" }}>
-                  <DotLottieReact
-                    src="https://lottie.host/4db68bbd-31f6-4cd8-84eb-189de081159a/IGmMCqhzpt.lottie"
-                    loop autoplay
-                    style={{ width: "100%", height: "150px" }}
-                  />
+                <div
+                  style={{
+                    width: "120px",
+                    height: "120px",
+                    margin: "0 auto 16px",
+                    borderRadius: "50%",
+                    background: "radial-gradient(circle at 30% 30%, rgba(79,172,254,.35), rgba(255,122,24,.2))",
+                    border: "1px solid var(--border)",
+                  }}
+                >
                 </div>
                 <h4 style={{ fontSize: "20px", fontFamily: "var(--font-heading)", color: "var(--sub)", fontWeight: 700 }}>Ready to Match</h4>
                 <p style={{ color: "var(--muted)", fontSize: "13px" }}>Click "Scan & Match" to find opportunities</p>
@@ -243,7 +267,7 @@ export default function DashboardPage() {
                     </div>
                     <div style={{ textAlign: "center", flexShrink: 0 }}>
                       <div style={{ fontSize: "28px", fontFamily: "var(--font-heading)", fontWeight: 800, color: job.score >= 75 ? "var(--teal)" : job.score >= 55 ? "var(--gold)" : "var(--red)" }}>
-                        <CountUp end={job.score} duration={1} />
+                        {job.score}
                       </div>
                       <div style={{ fontSize: "8px", fontFamily: "monospace", color: "var(--sub)", textTransform: "uppercase" }}>% Match</div>
                     </div>
